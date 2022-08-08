@@ -12,7 +12,7 @@ import moe.ahao.commerce.order.api.command.GenOrderIdCommand;
 import moe.ahao.commerce.order.application.GenOrderIdAppService;
 import moe.ahao.commerce.order.infrastructure.config.OrderProperties;
 import moe.ahao.commerce.order.infrastructure.enums.CommentStatusEnum;
-import moe.ahao.commerce.order.infrastructure.enums.OrderTypeEnum;
+import moe.ahao.commerce.common.enums.OrderTypeEnum;
 import moe.ahao.commerce.order.infrastructure.enums.PayStatusEnum;
 import moe.ahao.commerce.order.infrastructure.enums.SnapshotTypeEnum;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.*;
@@ -132,11 +132,12 @@ public class OrderDataBuilder {
             BigDecimal originAmount = data.getSaleQuantity().multiply(data.getSalePrice());
             data.setOriginAmount(originAmount);
             // 商品项目实际支付金额，默认是originAmount，但是有优惠抵扣的时候需要分摊
-            BigDecimal payAmount = Optional.of(orderItemAmountMap.get(skuCode))
-                .map(m -> m.get(AmountTypeEnum.COUPON_DISCOUNT_AMOUNT.getCode()))
-                .map(CalculateOrderAmountDTO.OrderItemAmountDTO::getAmount)
-                .filter(a -> a.compareTo(BigDecimal.ZERO) > 0)
-                .orElse(data.getOriginAmount());
+            BigDecimal payAmount = Optional.of(orderItemAmountMap.get(skuCode))     // 获取当前sku的金额, 以AmountTypeEnum为key, 金额为value
+                .map(m -> m.get(AmountTypeEnum.COUPON_DISCOUNT_AMOUNT.getCode()))   // 获取当前sku的优惠抵扣金额DTO
+                .map(CalculateOrderAmountDTO.OrderItemAmountDTO::getAmount)         // 获取当前sku的优惠抵扣金额BigDecimal
+                .filter(a -> a.compareTo(BigDecimal.ZERO) > 0)  // 如果有优惠抵扣金额
+                .map(a -> data.getOriginAmount().subtract(a))   // 就用原始金额减去优惠抵扣金额, 等于实付金额
+                .orElse(data.getOriginAmount());                // 如果没有优惠抵扣金额, 就拿原始金额作为实付金额
             data.setPayAmount(payAmount);
 
             list.add(data);
