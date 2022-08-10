@@ -2,42 +2,40 @@ package moe.ahao.commerce.aftersale.adapter.mq;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.aftersale.application.CancelOrderRefundAppService;
-import moe.ahao.commerce.common.infrastructure.event.CancelOrderRefundEvent;
-import moe.ahao.commerce.common.infrastructure.rocketmq.AbstractMessageListenerConcurrently;
+import moe.ahao.commerce.common.constants.RocketMqConstant;
+import moe.ahao.commerce.common.infrastructure.event.ReleaseAssetsEvent;
+import moe.ahao.commerce.common.infrastructure.rocketmq.AbstractRocketMqListener;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
 import moe.ahao.util.commons.io.JSONHelper;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
-import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.spring.annotation.ConsumeMode;
+import org.apache.rocketmq.spring.annotation.MessageModel;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Slf4j
 @Component
-public class CancelOrderRefundListener extends AbstractMessageListenerConcurrently {
+@RocketMQMessageListener(
+    topic = RocketMqConstant.RELEASE_ASSETS_TOPIC,
+    consumerGroup = RocketMqConstant.REQUEST_CONSUMER_GROUP,
+    selectorExpression = "*",
+    consumeMode = ConsumeMode.CONCURRENTLY,
+    messageModel = MessageModel.CLUSTERING,
+    consumeThreadMax = 1
+)
+public class CancelOrderRefundListener extends AbstractRocketMqListener {
     @Autowired
     private CancelOrderRefundAppService cancelOrderRefundAppService;
 
     @Override
-    public ConsumeConcurrentlyStatus onMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
-        try {
-            for (MessageExt messageExt : list) {
-                String message = new String(messageExt.getBody());
-                CancelOrderRefundEvent event = JSONHelper.parse(message, CancelOrderRefundEvent.class);
-                log.info("接收到取消订单退款消息:{}", message);
+    public void onMessage(String message) {
+        ReleaseAssetsEvent event = JSONHelper.parse(message, ReleaseAssetsEvent.class);
+        log.info("接收到取消订单退款消息:{}", message);
 
-                //  执行 取消订单/超时未支付取消 前的操作
-                boolean success = cancelOrderRefundAppService.handler(event);
-                if (!success) {
-                    throw OrderExceptionEnum.CONSUME_MQ_FAILED.msg();
-                }
-            }
-            return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-        } catch (Exception e) {
-            log.error("consumer error", e);
-            return ConsumeConcurrentlyStatus.RECONSUME_LATER;
+        String orderId = event.getOrderId();
+        boolean success = cancelOrderRefundAppService.handler(orderId);
+        if (!success) {
+            throw OrderExceptionEnum.CONSUME_MQ_FAILED.msg();
         }
     }
 }

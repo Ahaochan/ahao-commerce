@@ -8,65 +8,63 @@ import moe.ahao.commerce.aftersale.application.OrderLackAppService;
 import moe.ahao.commerce.common.enums.OrderStatusEnum;
 import moe.ahao.commerce.order.api.dto.OrderDetailDTO;
 import moe.ahao.commerce.order.api.dto.OrderListDTO;
-import moe.ahao.commerce.order.api.query.OrderQuery;
-import moe.ahao.commerce.order.infrastructure.enums.BusinessIdentifierEnum;
-import moe.ahao.commerce.order.infrastructure.enums.OrderTypeEnum;
+import moe.ahao.commerce.order.api.query.OrderPageQuery;
+import moe.ahao.commerce.common.enums.BusinessIdentifierEnum;
+import moe.ahao.commerce.common.enums.OrderTypeEnum;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
+import moe.ahao.commerce.order.infrastructure.repository.impl.mongodb.OrderOperateLogRepository;
+import moe.ahao.commerce.order.infrastructure.repository.impl.hbase.OrderSnapshotRepository;
+import moe.ahao.commerce.order.infrastructure.repository.impl.elasticsearch.OrderListEsRepository;
+import moe.ahao.commerce.order.infrastructure.repository.impl.elasticsearch.data.EsOrderListQueryDO;
+import moe.ahao.commerce.order.infrastructure.repository.impl.hbase.data.OrderSnapshotDO;
+import moe.ahao.commerce.order.infrastructure.repository.impl.mongodb.data.OrderOperateLogDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.*;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.*;
 import moe.ahao.domain.entity.PagingInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 public class OrderQueryService {
-
     @Autowired
     private OrderInfoMapper orderInfoMapper;
-
     @Autowired
     private OrderItemMapper orderItemMapper;
-
     @Autowired
     private OrderAmountDetailMapper orderAmountDetailMapper;
-
     @Autowired
     private OrderDeliveryDetailMapper orderDeliveryDetailMapper;
-
     @Autowired
     private OrderPaymentDetailMapper orderPaymentDetailMapper;
-
     @Autowired
-    private OrderSnapshotMapper orderSnapshotMapper;
-
+    private OrderSnapshotRepository orderSnapshotRepository;
     @Autowired
     private OrderAmountMapper orderAmountMapper;
-
     @Autowired
-    private OrderOperateLogMapper orderOperateLogMapper;
-
+    private OrderOperateLogRepository orderOperateLogRepository;
     @Autowired
     private AfterSaleQueryService afterSaleQueryService;
-
     @Autowired
     private OrderLackAppService orderLackService;
 
-    public PagingInfo<OrderListDTO> query(OrderQuery query) {
+    @Autowired
+    private OrderListEsRepository orderListEsRepository;
+
+    public PagingInfo<OrderListDTO> queryV1(OrderPageQuery query) {
         // 1. 参数校验
         this.checkQueryParam(query);
 
-        // TODO 第一阶段采用很low的连表查询，连接5张表，即使加索引，只要数据量稍微大一点查询性能就很低了
-        //      第二阶段会接入es，优化这块的查询性能
+        // 第一阶段采用很low的连表查询，连接5张表，即使加索引，只要数据量稍微大一点查询性能就很低了
+        // 第二阶段会接入es，优化这块的查询性能
 
         // 1. 组装业务查询规则
         if (CollectionUtils.isEmpty(query.getOrderStatus())) {
@@ -85,7 +83,31 @@ public class OrderQueryService {
         return pagingInfo;
     }
 
-    private void checkQueryParam(OrderQuery query) {
+    public PagingInfo<OrderDetailDTO> queryV2(OrderPageQuery query) {
+        // 1. 参数校验
+        this.checkQueryParam(query);
+
+        // 2. 在ES查询
+        SearchHits<EsOrderListQueryDO> hits = orderListEsRepository.query(query);
+
+        // 3. 转化
+        List<OrderDetailDTO> orderDetailList = new ArrayList<>();
+        for (SearchHit<EsOrderListQueryDO> hit : hits) {
+            EsOrderListQueryDO content = hit.getContent();
+            String orderId = content.getOrderId();
+
+            OrderDetailDTO orderDetail = this.orderDetail(orderId);
+            orderDetailList.add(orderDetail);
+        }
+        PagingInfo<OrderDetailDTO> pagingInfo = new PagingInfo<>();
+        pagingInfo.setPageNo(query.getPageNo());
+        pagingInfo.setPageSize(query.getPageSize());
+        pagingInfo.setTotal(hits.getTotalHits());
+        pagingInfo.setList(orderDetailList);
+        return pagingInfo;
+    }
+
+    private void checkQueryParam(OrderPageQuery query) {
         if (query == null) {
             throw OrderExceptionEnum.BUSINESS_IDENTIFIER_IS_NULL.msg();
         }
@@ -102,7 +124,7 @@ public class OrderQueryService {
             throw OrderExceptionEnum.ORDER_TYPE_ERROR.msg();
         }
 
-        int maxSize = OrderQuery.MAX_PAGE_SIZE;
+        int maxSize = OrderPageQuery.MAX_PAGE_SIZE;
         Set<String> orderIds = query.getOrderIds();
         if (CollectionUtils.isNotEmpty(orderIds) && orderIds.size() > maxSize) {
             throw OrderExceptionEnum.COLLECTION_PARAM_CANNOT_BEYOND_MAX_SIZE.msg("orderIds", maxSize);
@@ -147,7 +169,7 @@ public class OrderQueryService {
     public OrderDetailDTO orderDetail(String orderId) {
         // 1. 查询订单
         if (StringUtils.isEmpty(orderId)) {
-            throw OrderExceptionEnum.ORDER_ID_IS_NULL.msg();
+            throw null;
         }
         OrderInfoDO orderInfo = orderInfoMapper.selectOneByOrderId(orderId);
         if (orderInfo == null) {
@@ -176,27 +198,7 @@ public class OrderQueryService {
         dto.setExtJson(orderInfo.getExtJson());
 
         // 2. 查询订单条目
-        List<OrderItemDO> orderItems = orderItemMapper.selectListByOrderId(orderId);
-        List<OrderDetailDTO.OrderItemDTO> orderItemDTOList = new ArrayList<>();
-        for (OrderItemDO orderItem : orderItems) {
-            OrderDetailDTO.OrderItemDTO orderItemDTO = new OrderDetailDTO.OrderItemDTO();
-            orderItemDTO.setOrderId(orderItem.getOrderId());
-            orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
-            orderItemDTO.setProductType(orderItem.getProductType());
-            orderItemDTO.setProductId(orderItem.getProductId());
-            orderItemDTO.setProductImg(orderItem.getProductImg());
-            orderItemDTO.setProductName(orderItem.getProductName());
-            orderItemDTO.setSkuCode(orderItem.getSkuCode());
-            orderItemDTO.setSaleQuantity(orderItem.getSaleQuantity());
-            orderItemDTO.setSalePrice(orderItem.getSalePrice());
-            orderItemDTO.setOriginAmount(orderItem.getOriginAmount());
-            orderItemDTO.setPayAmount(orderItem.getPayAmount());
-            orderItemDTO.setProductUnit(orderItem.getProductUnit());
-            orderItemDTO.setPurchasePrice(orderItem.getPurchasePrice());
-            orderItemDTO.setSellerId(orderItem.getSellerId());
-
-            orderItemDTOList.add(orderItemDTO);
-        }
+        List<OrderDetailDTO.OrderItemDTO> orderItemDTOList = this.orderItemDetail(orderId);
         dto.setOrderItems(orderItemDTOList);
 
         // 3. 查询订单费用明细
@@ -264,7 +266,7 @@ public class OrderQueryService {
         dto.setOrderAmounts(orderAmountMap);
 
         // 7. 查询订单操作日志
-        List<OrderOperateLogDO> orderOperateLogs = orderOperateLogMapper.selectListByOrderId(orderId);
+        List<OrderOperateLogDO> orderOperateLogs = orderOperateLogRepository.getListByOrderId(orderId);
         List<OrderDetailDTO.OrderOperateLogDTO> orderOperateLogDTOList = new ArrayList<>();
         for (OrderOperateLogDO orderOperateLog : orderOperateLogs) {
             OrderDetailDTO.OrderOperateLogDTO orderOperateLogDTO = new OrderDetailDTO.OrderOperateLogDTO();
@@ -279,7 +281,7 @@ public class OrderQueryService {
         dto.setOrderOperateLogs(orderOperateLogDTOList);
 
         // 8. 查询订单快照
-        List<OrderSnapshotDO> orderSnapshots = orderSnapshotMapper.selectListByOrderId(orderId);
+        List<OrderSnapshotDO> orderSnapshots = orderSnapshotRepository.getListByOrderId(orderId);
         List<OrderDetailDTO.OrderSnapshotDTO> orderSnapshotDTOList = new ArrayList<>();
         for (OrderSnapshotDO orderSnapshot : orderSnapshots) {
             OrderDetailDTO.OrderSnapshotDTO orderSnapshotDTO = new OrderDetailDTO.OrderSnapshotDTO();
@@ -296,5 +298,30 @@ public class OrderQueryService {
             dto.setLackItems(lackItems);
         }
         return dto;
+    }
+
+    public List<OrderDetailDTO.OrderItemDTO> orderItemDetail(String orderId) {
+        List<OrderItemDO> orderItems = orderItemMapper.selectListByOrderId(orderId);
+        List<OrderDetailDTO.OrderItemDTO> orderItemDTOList = new ArrayList<>();
+        for (OrderItemDO orderItem : orderItems) {
+            OrderDetailDTO.OrderItemDTO orderItemDTO = new OrderDetailDTO.OrderItemDTO();
+            orderItemDTO.setOrderId(orderItem.getOrderId());
+            orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
+            orderItemDTO.setProductType(orderItem.getProductType());
+            orderItemDTO.setProductId(orderItem.getProductId());
+            orderItemDTO.setProductImg(orderItem.getProductImg());
+            orderItemDTO.setProductName(orderItem.getProductName());
+            orderItemDTO.setSkuCode(orderItem.getSkuCode());
+            orderItemDTO.setSaleQuantity(orderItem.getSaleQuantity());
+            orderItemDTO.setSalePrice(orderItem.getSalePrice());
+            orderItemDTO.setOriginAmount(orderItem.getOriginAmount());
+            orderItemDTO.setPayAmount(orderItem.getPayAmount());
+            orderItemDTO.setProductUnit(orderItem.getProductUnit());
+            orderItemDTO.setPurchasePrice(orderItem.getPurchasePrice());
+            orderItemDTO.setSellerId(orderItem.getSellerId());
+
+            orderItemDTOList.add(orderItemDTO);
+        }
+        return orderItemDTOList;
     }
 }

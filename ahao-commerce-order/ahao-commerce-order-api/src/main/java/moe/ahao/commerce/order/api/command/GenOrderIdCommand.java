@@ -9,10 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GenOrderIdCommand {
     /**
-     * 业务线标识
-     */
-    private Integer businessIdentifier;
-    /**
      * 订单号类型枚举
      */
     private Integer orderIdType;

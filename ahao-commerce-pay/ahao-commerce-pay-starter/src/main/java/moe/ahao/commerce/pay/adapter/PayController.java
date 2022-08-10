@@ -1,8 +1,10 @@
 package moe.ahao.commerce.pay.adapter;
 
 import lombok.extern.slf4j.Slf4j;
+import moe.ahao.commerce.aftersale.api.command.RefundOrderCallbackCommand;
 import moe.ahao.commerce.pay.api.PayFeignApi;
 import moe.ahao.commerce.pay.api.command.PayOrderCommand;
+import moe.ahao.commerce.pay.api.command.RefundCallbackCommand;
 import moe.ahao.commerce.pay.api.command.RefundOrderCommand;
 import moe.ahao.commerce.pay.api.dto.PayOrderDTO;
 import moe.ahao.commerce.pay.application.PayOrderAppService;
@@ -44,7 +46,7 @@ public class PayController implements PayFeignApi {
      * 取消订单支付退款回调
      */
     @PostMapping("/refundCallback")
-    public Result<Boolean> refundCallback(@RequestBody HttpServletRequest request) {
+    public Result<Boolean> refundCallback(@RequestBody RefundCallbackCommand request) {
         boolean success = refundOrderCallbackAppService.callback(request);
         return Result.success(success);
     }

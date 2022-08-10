@@ -1,12 +1,8 @@
 package moe.ahao.commerce.aftersale.application;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import moe.ahao.commerce.aftersale.api.dto.AfterSaleOrderDetailDTO;
-import moe.ahao.commerce.aftersale.api.dto.AfterSaleOrderListDTO;
-import moe.ahao.commerce.aftersale.api.dto.OrderLackItemDTO;
-import moe.ahao.commerce.aftersale.api.query.AfterSaleQuery;
-import moe.ahao.commerce.aftersale.infrastructure.enums.AfterSaleApplySourceEnum;
-import moe.ahao.commerce.aftersale.infrastructure.enums.AfterSaleStatusEnum;
+import moe.ahao.commerce.aftersale.api.dto.*;
+import moe.ahao.commerce.aftersale.api.query.AfterSalePageQuery;
 import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO;
 import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO;
 import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleLogDO;
@@ -15,16 +11,17 @@ import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.mapper
 import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.mapper.AfterSaleItemMapper;
 import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.mapper.AfterSaleLogMapper;
 import moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.mapper.AfterSaleRefundMapper;
-import moe.ahao.commerce.common.enums.AfterSaleTypeDetailEnum;
-import moe.ahao.commerce.common.enums.AfterSaleTypeEnum;
-import moe.ahao.commerce.order.infrastructure.enums.BusinessIdentifierEnum;
-import moe.ahao.commerce.order.infrastructure.enums.OrderTypeEnum;
+import moe.ahao.commerce.common.enums.*;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
+import moe.ahao.commerce.aftersale.infrastructure.repository.impl.elasticsearch.AfterSaleListEsRepository;
+import moe.ahao.commerce.aftersale.infrastructure.repository.impl.elasticsearch.data.EsAfterSaleListQueryDO;
 import moe.ahao.domain.entity.PagingInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -46,10 +43,13 @@ public class AfterSaleQueryService {
     @Autowired
     private AfterSaleLogMapper afterSaleLogMapper;
 
+    @Autowired
+    private AfterSaleListEsRepository afterSaleListEsRepository;
+
     /**
      * 执行列表查询
      */
-    public PagingInfo<AfterSaleOrderListDTO> executeListQuery(AfterSaleQuery query) {
+    public PagingInfo<AfterSaleOrderListDTO> queryV1(AfterSalePageQuery query) {
         // 1. 参数校验
         this.check(query);
         // 2. 组装业务查询规则
@@ -58,8 +58,8 @@ public class AfterSaleQueryService {
             query.setApplySources(AfterSaleApplySourceEnum.userApply());
         }
 
-        // TODO  第一阶段采用连表查询
-        //       第二阶段会接入es
+        // 第一阶段采用连表查询
+        // 第二阶段会接入es
 
         // 2. 查询
         Page<AfterSaleOrderListDTO> page = afterSaleInfoMapper.selectPage(new Page<>(query.getPageNo(), query.getPageSize()), query);
@@ -73,10 +73,38 @@ public class AfterSaleQueryService {
         return pagingInfo;
     }
 
+    public PagingInfo<AfterSaleOrderDetailDTO> queryV2(AfterSalePageQuery query) {
+        // 1. 参数校验
+        this.check(query);
+
+        // 2. 在ES查询
+        if (CollectionUtils.isEmpty(query.getApplySources())) {
+            //默认只展示用户主动发起的售后单
+            query.setApplySources(AfterSaleApplySourceEnum.userApply());
+        }
+        SearchHits<EsAfterSaleListQueryDO> hits = afterSaleListEsRepository.query(query);
+
+        // 3. 转化
+        List<AfterSaleOrderDetailDTO> afterSaleOrderDetailList = new ArrayList<>();
+        for (SearchHit<EsAfterSaleListQueryDO> hit : hits) {
+            EsAfterSaleListQueryDO content = hit.getContent();
+            String afterSaleId = content.getAfterSaleId();
+
+            AfterSaleOrderDetailDTO afterSaleOrderDetail = this.afterSaleDetail(afterSaleId);
+            afterSaleOrderDetailList.add(afterSaleOrderDetail);
+        }
+        PagingInfo<AfterSaleOrderDetailDTO> pagingInfo = new PagingInfo<>();
+        pagingInfo.setPageNo(query.getPageNo());
+        pagingInfo.setPageSize(query.getPageSize());
+        pagingInfo.setTotal(hits.getTotalHits());
+        pagingInfo.setList(afterSaleOrderDetailList);
+        return pagingInfo;
+    }
+
     /**
      * 校验列表查询参数
      */
-    public void check(AfterSaleQuery query) {
+    public void check(AfterSalePageQuery query) {
         Integer businessIdentifier = query.getBusinessIdentifier();
         if (businessIdentifier == null) {
             throw OrderExceptionEnum.BUSINESS_IDENTIFIER_IS_NULL.msg();
@@ -103,7 +131,7 @@ public class AfterSaleQueryService {
             throw OrderExceptionEnum.ENUM_PARAM_MUST_BE_IN_ALLOWABLE_VALUE.msg("afterSaleTypes", AfterSaleTypeEnum.allowableValues());
         }
 
-        int maxSize = AfterSaleQuery.MAX_PAGE_SIZE;
+        int maxSize = AfterSalePageQuery.MAX_PAGE_SIZE;
         Set<String> afterSaleIds = query.getAfterSaleIds();
         if (CollectionUtils.isNotEmpty(afterSaleIds) && afterSaleIds.size() > maxSize) {
             throw OrderExceptionEnum.COLLECTION_PARAM_CANNOT_BEYOND_MAX_SIZE.msg("afterSaleIds", maxSize);
@@ -158,9 +186,9 @@ public class AfterSaleQueryService {
 
         // 3. 查询售后单条目
         List<AfterSaleItemDO> afterSaleItems = afterSaleItemMapper.selectListByAfterSaleId(afterSaleId);
-        List<AfterSaleOrderDetailDTO.AfterSaleItemDTO> afterSaleItemDTOList = new ArrayList<>();
+        List<AfterSaleItemDTO> afterSaleItemDTOList = new ArrayList<>();
         for (AfterSaleItemDO afterSaleItem : afterSaleItems) {
-            AfterSaleOrderDetailDTO.AfterSaleItemDTO afterSaleItemDTO = new AfterSaleOrderDetailDTO.AfterSaleItemDTO();
+            AfterSaleItemDTO afterSaleItemDTO = new AfterSaleItemDTO();
             afterSaleItemDTO.setAfterSaleId(afterSaleItem.getAfterSaleId());
             afterSaleItemDTO.setOrderId(afterSaleItem.getOrderId());
             afterSaleItemDTO.setSkuCode(afterSaleItem.getSkuCode());
@@ -176,7 +204,7 @@ public class AfterSaleQueryService {
 
         // 4. 查询售后支付信息
         AfterSaleRefundDO afterSalePays = afterSaleRefundMapper.selectOneByAfterSaleId(afterSaleId);
-        AfterSaleOrderDetailDTO.AfterSalePayDTO afterSalePayDTO = new AfterSaleOrderDetailDTO.AfterSalePayDTO();
+        AfterSaleRefundDTO afterSalePayDTO = new AfterSaleRefundDTO();
         afterSalePayDTO.setAfterSaleRefundId(afterSalePays.getAfterSaleRefundId());
         afterSalePayDTO.setAfterSaleId(afterSalePays.getAfterSaleId());
         afterSalePayDTO.setOrderId(afterSalePays.getOrderId());

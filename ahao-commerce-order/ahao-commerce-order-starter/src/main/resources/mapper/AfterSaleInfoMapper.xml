@@ -17,26 +17,29 @@
         after_sale_status = #{afterSaleStatus}
         where after_sale_id = #{afterSaleId}
     </update>
-    <select id="selectListByOrderIdAndAfterSaleTypeDetails"
-            resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
+    <select id="selectListByOrderIdAndAfterSaleTypeDetails" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
         select * from after_sale_info
         where order_id = #{orderId} and
         after_sale_type_detail in
         <foreach collection="afterSaleTypeDetails" item="item" open="(" close=")" separator=",">#{item}</foreach>
     </select>
-    <select id="selectOneByAfterSaleId"
-            resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
+    <select id="selectListByAfterSaleIds" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
+        select * from after_sale_info
+        where after_sale_id in
+        <foreach collection="afterSaleIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+    </select>
+
+    <select id="selectOneByAfterSaleId" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
         select *
         from after_sale_info
         where after_sale_id = #{afterSaleId}
     </select>
-    <select id="selectOneByOrderId"
-            resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
+    <select id="selectOneByOrderId" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO">
         select *
         from after_sale_info
         where order_id = #{orderId}
     </select>
-    <select id="selectPage" parameterType="moe.ahao.commerce.aftersale.api.query.AfterSaleQuery"
+    <select id="selectPage" parameterType="moe.ahao.commerce.aftersale.api.query.AfterSalePageQuery"
             resultType="moe.ahao.commerce.aftersale.api.dto.AfterSaleOrderListDTO">
         select a.after_sale_id AS afterSaleId,
         a.business_identifier AS businessIdentifier, a.order_id AS orderId, a.order_type AS orderType, a.user_id AS userId,

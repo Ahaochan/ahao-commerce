@@ -15,8 +15,9 @@ import java.util.Date;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("after_sale_refund")
+@TableName(AfterSaleRefundDO.TABLE_NAME)
 public class AfterSaleRefundDO extends BaseDO {
+    public static final String TABLE_NAME = "after_sale_refund";
     /**
      * 主键ID
      */

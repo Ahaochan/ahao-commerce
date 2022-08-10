@@ -2,11 +2,11 @@ package moe.ahao.commerce.inventory;
 
 import moe.ahao.commerce.inventory.api.command.DeductProductStockCommand;
 import moe.ahao.commerce.inventory.api.command.ReleaseProductStockCommand;
+import moe.ahao.commerce.inventory.api.dto.ProductStockDTO;
 import moe.ahao.commerce.inventory.application.DeductProductStockAppService;
 import moe.ahao.commerce.inventory.application.InventoryQueryService;
 import moe.ahao.commerce.inventory.application.ReleaseProductStockAppService;
 import moe.ahao.commerce.inventory.application.SyncStockToCacheProcessor;
-import moe.ahao.commerce.inventory.infrastructure.cache.RedisCacheSupport;
 import moe.ahao.embedded.RedisExtension;
 import moe.ahao.util.commons.juc.ConcurrentTestUtils;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = InventoryApplication.class)
 @ActiveProfiles("test")
 // @Transactional // 这里不能加事务, MySQLTransactionRollbackException: Lock wait timeout exceeded; try restarting transaction
@@ -65,25 +64,13 @@ class InventoryDeductTest {
         BigDecimal newSaledStockQuantity1 = oldSaledStockQuantity1.add(saleIncremental1.multiply(new BigDecimal(threadCount)));
         BigDecimal newSaleStockQuantity2 = oldSaleStockQuantity2.subtract(saleIncremental2.multiply(new BigDecimal(threadCount)));
         BigDecimal newSaledStockQuantity2 = oldSaledStockQuantity2.add(saleIncremental2.multiply(new BigDecimal(threadCount)));
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode1).entrySet()) {
-            Assertions.assertEquals(0, newSaleStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, newSaledStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode2).entrySet()) {
-            Assertions.assertEquals(0, newSaleStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, newSaledStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
+        this.assertAmount(skuCode1, newSaleStockQuantity1, newSaledStockQuantity1);
+        this.assertAmount(skuCode2, newSaleStockQuantity2, newSaledStockQuantity2);
 
         // 3. 回退库存
         this.release(threadCount, saleIncremental1, saleIncremental2);
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode1).entrySet()) {
-            Assertions.assertEquals(0, oldSaleStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, oldSaledStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode2).entrySet()) {
-            Assertions.assertEquals(0, oldSaleStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, oldSaledStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
+        this.assertAmount(skuCode1, oldSaleStockQuantity1, oldSaledStockQuantity1);
+        this.assertAmount(skuCode2, oldSaleStockQuantity2, oldSaledStockQuantity2);
     }
 
     @Test
@@ -97,27 +84,15 @@ class InventoryDeductTest {
 
         // 2. 扣减库存失败
         this.deduct(threadCount, saleIncremental1, saleIncremental2);
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode1).entrySet()) {
-            Assertions.assertEquals(0, oldSaleStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, oldSaledStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode2).entrySet()) {
-            Assertions.assertEquals(0, oldSaleStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, oldSaledStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
+        this.assertAmount(skuCode1, oldSaleStockQuantity1, oldSaledStockQuantity1);
+        this.assertAmount(skuCode2, oldSaleStockQuantity2, oldSaledStockQuantity2);
     }
 
     void init() throws Exception {
         syncStockToCacheProcessor.syncStock(skuCode1);
         syncStockToCacheProcessor.syncStock(skuCode2);
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode1).entrySet()) {
-            Assertions.assertEquals(0, oldSaleStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, oldSaledStockQuantity1.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
-        for (Map.Entry<String, Map<String, BigDecimal>> entry : inventoryQueryService.query(skuCode2).entrySet()) {
-            Assertions.assertEquals(0, oldSaleStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALE_STOCK)));
-            Assertions.assertEquals(0, oldSaledStockQuantity2.compareTo(entry.getValue().get(RedisCacheSupport.SALED_STOCK)));
-        }
+        this.assertAmount(skuCode1, oldSaleStockQuantity1, oldSaledStockQuantity1);
+        this.assertAmount(skuCode2, oldSaleStockQuantity2, oldSaledStockQuantity2);
     }
 
     void deduct(int threadCount, BigDecimal saleIncremental1, BigDecimal saleIncremental2) throws Exception {
@@ -153,5 +128,15 @@ class InventoryDeductTest {
             });
         }
         ConcurrentTestUtils.concurrentRunnable(threadCount, taskList);
+    }
+
+    void assertAmount(String skuCode, BigDecimal expectSaleStockQuantity, BigDecimal expectSaledStockQuantity) {
+        for (Map.Entry<String, ProductStockDTO> entry : inventoryQueryService.queryV1(skuCode).entrySet()) {
+            Assertions.assertEquals(0, expectSaleStockQuantity.compareTo(entry.getValue().getSaleStockQuantity()));
+            Assertions.assertEquals(0, expectSaledStockQuantity.compareTo(entry.getValue().getSaledStockQuantity()));
+        }
+        ProductStockDTO productStockDTO = inventoryQueryService.queryV2(skuCode);
+        Assertions.assertEquals(0, expectSaleStockQuantity.compareTo(productStockDTO.getSaleStockQuantity()));
+        Assertions.assertEquals(0, expectSaledStockQuantity.compareTo(productStockDTO.getSaledStockQuantity()));
     }
 }

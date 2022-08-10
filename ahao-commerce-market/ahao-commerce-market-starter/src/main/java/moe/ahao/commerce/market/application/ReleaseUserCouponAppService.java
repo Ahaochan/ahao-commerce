@@ -2,8 +2,8 @@ package moe.ahao.commerce.market.application;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.common.constants.RedisLockKeyConstants;
-import moe.ahao.commerce.market.api.command.ReleaseUserCouponEvent;
-import moe.ahao.commerce.market.infrastructure.enums.CouponUsedStatusEnum;
+import moe.ahao.commerce.market.api.command.ReleaseUserCouponCommand;
+import moe.ahao.commerce.common.enums.CouponUsedStatusEnum;
 import moe.ahao.commerce.market.infrastructure.exception.MarketExceptionEnum;
 import moe.ahao.commerce.market.infrastructure.repository.impl.mybatis.data.CouponDO;
 import moe.ahao.commerce.market.infrastructure.repository.impl.mybatis.mapper.CouponMapper;
@@ -11,7 +11,6 @@ import moe.ahao.exception.CommonBizExceptionEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +21,18 @@ import java.util.Objects;
 @Service
 public class ReleaseUserCouponAppService {
     @Autowired
+    private ReleaseUserCouponAppService _this;
+    @Autowired
     private CouponMapper couponMapper;
     @Autowired
     private RedissonClient redissonClient;
 
-    public Boolean releaseUserCoupon(ReleaseUserCouponEvent command) {
-        log.info("开始执行回滚优惠券, couponId:{}", command.getCouponId());
-        String couponId = command.getCouponId();
+    public boolean releaseUserCoupon(ReleaseUserCouponCommand event) {
+        log.info("开始执行回滚优惠券, couponId:{}", event.getCouponId());
+        String couponId = event.getCouponId();
+        if (StringUtils.isEmpty(couponId)) {
+            return true;
+        }
         String lockKey = RedisLockKeyConstants.RELEASE_COUPON_KEY + couponId;
 
         RLock lock = redissonClient.getLock(lockKey);
@@ -38,10 +42,10 @@ public class ReleaseUserCouponAppService {
         }
         try {
             // 执行释放优惠券
-            Boolean result = ((ReleaseUserCouponAppService) AopContext.currentProxy()).releaseUserCouponWithTx(command);
+            boolean result = _this.releaseUserCouponWithTx(event);
             return result;
         } finally {
-            log.info("回滚优惠券成功, couponId:{}", command.getCouponId());
+            log.info("回滚优惠券成功, couponId:{}", event.getCouponId());
             lock.unlock();
         }
     }
@@ -50,16 +54,16 @@ public class ReleaseUserCouponAppService {
      * 这里不会有并发问题, 数据库会加上行锁
      */
     @Transactional(rollbackFor = Exception.class)
-    public Boolean releaseUserCouponWithTx(ReleaseUserCouponEvent command) {
+    public boolean releaseUserCouponWithTx(ReleaseUserCouponCommand event) {
         // 1. 检查入参
-        this.check(command);
+        this.check(event);
 
         // 2. 获取优惠券信息
-        String userId = command.getUserId();
-        String couponId = command.getCouponId();
+        String userId = event.getUserId();
+        String couponId = event.getCouponId();
         CouponDO couponAchieve = couponMapper.selectOneByUserIdAndCouponId(userId, couponId);
         if (couponAchieve == null) {
-            throw MarketExceptionEnum.USER_COUPON_IS_NULL.msg();
+            return true;
         }
         // 3. 判断优惠券是否已经使用了
         if (!Objects.equals(CouponUsedStatusEnum.USED.getCode(), couponAchieve.getUsed())) {
@@ -67,12 +71,12 @@ public class ReleaseUserCouponAppService {
             return true;
         }
 
-        // 4. 释放优惠券
+        // 4. 释放优惠券, 优惠券空回滚是没关系的, 状态一直停留在un_used
         couponMapper.updateUsedById(CouponUsedStatusEnum.UN_USED.getCode(), null, couponAchieve.getId());
         return true;
     }
 
-    private void check(ReleaseUserCouponEvent command) {
+    private void check(ReleaseUserCouponCommand command) {
         String userId = command.getUserId();
         String couponId = command.getCouponId();
         if (StringUtils.isAnyEmpty(userId, couponId)) {

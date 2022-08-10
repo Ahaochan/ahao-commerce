@@ -9,5 +9,8 @@
     <select id="selectOneByAfterSaleId" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleRefundDO">
         select * from after_sale_refund where after_sale_id = #{afterSaleId}
     </select>
+    <select id="selectListByAfterSaleIds" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleRefundDO">
+        select * from after_sale_refund where after_sale_id in <foreach collection="afterSaleIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+    </select>
 
 </mapper>

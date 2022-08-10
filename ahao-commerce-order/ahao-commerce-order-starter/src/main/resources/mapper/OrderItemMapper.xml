@@ -4,6 +4,9 @@
     <select id="selectListByOrderId" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderItemDO">
         select * from order_item where order_id = #{orderId}
     </select>
+    <select id="selectListByOrderIds" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderItemDO">
+        select * from order_item where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+    </select>
     <select id="selectListByOrderIdAndProductType" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderItemDO">
         select * from order_item where order_id = #{orderId} and product_type = #{productType}
     </select>

@@ -9,9 +9,20 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ProductTypeEnum {
-    NORMAL_PRODUCT(1, "普通商品"),
-    ADVANCE_SALE(2, "预售商品"),
+    NORMAL(1, "普通商品"),
+    VIRTUAL(2, "虚拟商品"),
+    PRE_SALE(3, "预售商品"),
+    UNKNOWN(127, "其他");
     ;
     private final Integer code;
     private final String name;
+
+    public static ProductTypeEnum getByCode(Integer code) {
+        for (ProductTypeEnum element : ProductTypeEnum.values()) {
+            if (code.equals(element.getCode())) {
+                return element;
+            }
+        }
+        return null;
+    }
 }

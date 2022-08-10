@@ -10,56 +10,93 @@ public enum OrderStatusChangeEnum {
     /**
      * 订单已创建
      */
-    ORDER_CREATED(OrderStatusEnum.NULL, OrderStatusEnum.CREATED, OrderOperateTypeEnum.NEW_ORDER),
+    ORDER_CREATED(OrderStatusEnum.NULL, OrderStatusEnum.CREATED, OrderOperateTypeEnum.NEW_ORDER, "created"),
+    /**
+     * 订单预支付
+     */
+    ORDER_PREPAY(OrderStatusEnum.CREATED, OrderStatusEnum.CREATED, OrderOperateTypeEnum.PRE_PAY_ORDER, false),
     /**
      * 订单已支付
      */
-    ORDER_PAID(OrderStatusEnum.PAID, OrderStatusEnum.FULFILL, OrderOperateTypeEnum.PAID_ORDER),
+    ORDER_PAID(OrderStatusEnum.CREATED, OrderStatusEnum.PAID, OrderOperateTypeEnum.PAID_ORDER, "paid"),
     /**
      * 订单已履约
      */
-    ORDER_FULFILLED(OrderStatusEnum.PAID, OrderStatusEnum.FULFILL, OrderOperateTypeEnum.PUSH_ORDER_FULFILL),
+    ORDER_FULFILLED(OrderStatusEnum.PAID, OrderStatusEnum.FULFILL, OrderOperateTypeEnum.PUSH_ORDER_FULFILL, "fulfill"),
     /**
      * 订单已出库
      */
-    ORDER_OUT_STOCKED(OrderStatusEnum.FULFILL, OrderStatusEnum.OUT_STOCK, OrderOperateTypeEnum.ORDER_OUT_STOCK),
+    ORDER_OUT_STOCKED(OrderStatusEnum.FULFILL, OrderStatusEnum.OUT_STOCK, OrderOperateTypeEnum.ORDER_OUT_STOCK, "out_stock"),
     /**
      * 订单已配送
      */
-    ORDER_DELIVERED(OrderStatusEnum.OUT_STOCK, OrderStatusEnum.DELIVERY, OrderOperateTypeEnum.ORDER_DELIVERED),
+    ORDER_DELIVERED(OrderStatusEnum.OUT_STOCK, OrderStatusEnum.DELIVERY, OrderOperateTypeEnum.ORDER_DELIVERED, "delivery"),
     /**
      * 订单已签收
      */
-    ORDER_SIGNED(OrderStatusEnum.DELIVERY, OrderStatusEnum.SIGNED, OrderOperateTypeEnum.ORDER_SIGNED),
+    ORDER_SIGNED(OrderStatusEnum.DELIVERY, OrderStatusEnum.SIGNED, OrderOperateTypeEnum.ORDER_SIGNED, "signed"),
+    /**
+     * 订单取消
+     */
+    ORDER_CANCEL(OrderStatusEnum.CANCELLED, OrderStatusEnum.CANCELLED, OrderOperateTypeEnum.CANCEL_ORDER, false),
+    /**
+     * 订单自动超时未支付订单取消
+     */
+    ORDER_UN_PAID_AUTO_TIMEOUT_CANCELLED(OrderStatusEnum.CREATED, OrderStatusEnum.CANCELLED, OrderOperateTypeEnum.AUTO_CANCEL_ORDER, "auto_timeout_cancelled"),
+    /**
+     * 订单未支付手动取消
+     */
+    ORDER_UN_PAID_MANUAL_CANCELLED(OrderStatusEnum.CREATED, OrderStatusEnum.CANCELLED, OrderOperateTypeEnum.MANUAL_CANCEL_ORDER, "unpaid_manual_cancelled"),
+    /**
+     * 订单已支付手动取消
+     */
+    ORDER_PAID_MANUAL_CANCELLED(OrderStatusEnum.PAID, OrderStatusEnum.CANCELLED, OrderOperateTypeEnum.MANUAL_CANCEL_ORDER, "paid_manual_cancelled"),
+    /**
+     * 订单已履约手动取消
+     */
+    ORDER_FULFILLED_MANUAL_CANCELLED(OrderStatusEnum.FULFILL, OrderStatusEnum.CANCELLED, OrderOperateTypeEnum.MANUAL_CANCEL_ORDER, "fulfilled_manual_cancelled"),
+    /**
+     * 主单完成支付已无效
+     */
+    ORDER_PAID_INVALID(OrderStatusEnum.CREATED, OrderStatusEnum.INVALID, OrderOperateTypeEnum.ORDER_PAID_INVALID, "paid_invalid"),
+    /**
+     * 虚拟订单已签收
+     */
+    VIRTUAL_ORDER_SIGNED(OrderStatusEnum.PAID, OrderStatusEnum.SIGNED, OrderOperateTypeEnum.SIGN_VIRTUAL_ORDER, "virtual_order_signed"),
+
+    /**
+     * 子单
+     */
+
+    /**
+     * 子单已创建
+     */
+    SUB_ORDER_CREATED(OrderStatusEnum.NULL, OrderStatusEnum.INVALID, OrderOperateTypeEnum.NEW_SUB_ORDER, "sub_created"),
+
+    /**
+     * 子单已支付
+     */
+    SUB_ORDER_PAID(OrderStatusEnum.INVALID, OrderStatusEnum.PAID, OrderOperateTypeEnum.PAID_SUB_ORDER, "sub_paid"),
     ;
 
-    OrderStatusChangeEnum(OrderStatusEnum preStatus, OrderStatusEnum currentStatus, OrderOperateTypeEnum operateType) {
-        this.preStatus = preStatus;
-        this.currentStatus = currentStatus;
+    OrderStatusChangeEnum(OrderStatusEnum fromStatus, OrderStatusEnum toStatus, OrderOperateTypeEnum operateType, String tags) {
+        this.fromStatus = fromStatus;
+        this.toStatus = toStatus;
         this.operateType = operateType;
+        this.tags = tags;
+        this.sendEvent = true;
     }
 
-    private final OrderStatusEnum preStatus;
-    private final OrderStatusEnum currentStatus;
+    OrderStatusChangeEnum(OrderStatusEnum fromStatus, OrderStatusEnum toStatus, OrderOperateTypeEnum operateType, boolean sendEvent) {
+        this.fromStatus = fromStatus;
+        this.toStatus = toStatus;
+        this.operateType = operateType;
+        this.sendEvent = sendEvent;
+    }
+
+    private final OrderStatusEnum fromStatus;
+    private final OrderStatusEnum toStatus;
     private final OrderOperateTypeEnum operateType;
-
-
-    public static OrderStatusChangeEnum getBy(int preStatus, int currentStatus) {
-        for (OrderStatusChangeEnum element : OrderStatusChangeEnum.values()) {
-            if (preStatus == element.preStatus.getCode() &&
-                    currentStatus == element.currentStatus.getCode()) {
-                return element;
-            }
-        }
-        return null;
-    }
-
-    public static OrderStatusChangeEnum getBy(int operateType) {
-        for (OrderStatusChangeEnum element : OrderStatusChangeEnum.values()) {
-            if (operateType == element.operateType.getCode()) {
-                return element;
-            }
-        }
-        return null;
-    }
+    private String tags;
+    private boolean sendEvent;
 }

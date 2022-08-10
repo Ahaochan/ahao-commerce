@@ -19,4 +19,20 @@ public class OrderAutoNoDO extends BaseDO {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+    /**
+     * 业务标识
+     */
+    private String bizTag;
+    /**
+     * 号段最大值
+     */
+    private Long maxId;
+    /**
+     * 下一个号段的步长
+     */
+    private Integer step;
+    /**
+     * 说明
+     */
+    private String desc;
 }

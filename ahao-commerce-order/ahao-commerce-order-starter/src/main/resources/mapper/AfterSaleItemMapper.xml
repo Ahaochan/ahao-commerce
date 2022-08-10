@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.mapper.AfterSaleItemMapper">
+    <update id="updateReturnCompletionMark">
+        update after_sale_item set return_completion_mark = #{mark} where order_id = #{orderId} and sku_code = #{skuCode}
+    </update>
     <select id="selectListByAfterSaleId" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
         select * from after_sale_item where after_sale_id = #{afterSaleId}
+    </select>
+    <select id="selectListByAfterSaleIds" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
+        select * from after_sale_item where after_sale_id in <foreach collection="afterSaleIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
     </select>
     <select id="selectListByOrderId" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
         select * from after_sale_item where order_id = #{orderId}
@@ -12,5 +18,18 @@
     </select>
     <select id="selectListByOrderIdAndExcludeAfterSaleId" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
         select * from after_sale_item where order_id = #{orderId} and after_sale_id != #{afterSaleId}
+    </select>
+    <select id="selectListByOrderIdAndReturnCompletionMark" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
+        select * from after_sale_item
+        where order_id = #{orderId} and return_completion_mark != #{returnCompletionMark}
+    </select>
+    <select id="selectListByOrderIdAndType" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
+        select * from after_sale_item
+        where order_id = #{orderId} and after_sale_item_type in
+        <foreach collection="afterSaleItemTypes" item="item" open="(" close=")" separator=",">#{item}</foreach>
+    </select>
+    <select id="selectLastOne" resultType="moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleItemDO">
+        select * from after_sale_item
+        where order_id = #{orderId} and after_sale_id != #{afterSaleId} and after_sale_item_type = #{afterSaleItemMark}
     </select>
 </mapper>

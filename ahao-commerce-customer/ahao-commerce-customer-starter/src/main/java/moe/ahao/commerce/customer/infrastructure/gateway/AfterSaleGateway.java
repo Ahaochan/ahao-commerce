@@ -24,8 +24,6 @@ public class AfterSaleGateway {
         afterSaleAuditCommand.setAfterSaleId(command.getAfterSaleId());
         afterSaleAuditCommand.setCustomerId(command.getCustomerId());
         afterSaleAuditCommand.setAuditResult(command.getAuditResult());
-        afterSaleAuditCommand.setAfterSaleRefundId(command.getAfterSaleRefundId());
-        afterSaleAuditCommand.setOrderId(command.getOrderId());
         afterSaleAuditCommand.setAuditResultDesc(command.getAuditResultDesc());
 
         Result<Boolean> result = afterSaleFeignClient.receiveCustomerAuditResult(afterSaleAuditCommand);

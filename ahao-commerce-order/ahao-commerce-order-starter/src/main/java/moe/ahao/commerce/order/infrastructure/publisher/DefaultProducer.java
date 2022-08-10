@@ -5,10 +5,7 @@ import moe.ahao.commerce.common.constants.RocketMqConstant;
 import moe.ahao.commerce.common.infrastructure.rocketmq.MQMessage;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
 import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
-import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.client.producer.SendStatus;
-import org.apache.rocketmq.client.producer.TransactionMQProducer;
+import org.apache.rocketmq.client.producer.*;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQProperties;
 import org.springframework.stereotype.Component;
@@ -49,8 +46,8 @@ public class DefaultProducer {
      * @param topic   topic
      * @param message 消息
      */
-    public void sendMessage(String topic, String message, String type, String tags, String keys) {
-        sendMessage(topic, message, -1, type, tags, keys);
+    public void sendMessage(String topic, String message, String tags, String keys) {
+        this.sendMessage(topic, message, -1, tags, keys, null, null);
     }
 
     /**
@@ -59,15 +56,30 @@ public class DefaultProducer {
      * @param topic   topic
      * @param message 消息
      */
-    public void sendMessage(String topic, String message, Integer delayTimeLevel, String type, String tags, String keys) {
+    public void sendMessage(String topic, String message, Integer delayTimeLevel, String tags, String keys) {
+        this.sendMessage(topic, message, delayTimeLevel, tags, keys, null, null);
+    }
+
+    /**
+     * 发送消息
+     *
+     * @param topic   topic
+     * @param message 消息
+     */
+    public void sendMessage(String topic, String message, Integer delayTimeLevel, String tags, String keys, MessageQueueSelector selector, Object arg) {
         Message msg = new MQMessage(topic, tags, keys, message.getBytes(StandardCharsets.UTF_8));
         try {
             if (delayTimeLevel > 0) {
                 msg.setDelayTimeLevel(delayTimeLevel);
             }
-            SendResult send = producer.send(msg);
+            SendResult send;
+            if (selector == null) {
+                send = producer.send(msg);
+            } else {
+                send = producer.send(msg, selector, arg);
+            }
             if (SendStatus.SEND_OK == send.getSendStatus()) {
-                log.info("发送MQ消息成功, type:{}, message:{}", type, message);
+                log.info("发送MQ消息成功, message:{}", message);
             } else {
                 throw OrderExceptionEnum.SEND_MQ_FAILED.msg();
             }

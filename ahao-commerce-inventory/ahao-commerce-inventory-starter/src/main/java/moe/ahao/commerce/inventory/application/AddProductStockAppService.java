@@ -10,7 +10,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -21,7 +23,8 @@ import java.math.BigDecimal;
 @Service
 public class AddProductStockAppService {
     @Autowired
-    private AddProductStockProcessor addProductStockProcessor;
+    @Lazy
+    private AddProductStockAppService _this;
 
     @Autowired
     private ProductStockMapper productStockMapper;
@@ -48,12 +51,30 @@ public class AddProductStockAppService {
         }
         try {
             // 4. 执行添加商品库存逻辑
-            addProductStockProcessor.doAddStockWithTx(command);
+            _this.doAddStockWithTx(command);
         } finally {
             // 5. 解锁
             lock.unlock();
         }
         return true;
+    }
+
+    /**
+     * 执行添加商品库存逻辑
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void doAddStockWithTx(AddProductStockCommand command) {
+        // 1. 构造商品库存DO
+        ProductStockDO productStock = new ProductStockDO();
+        productStock.setSkuCode(command.getSkuCode());
+        productStock.setSaleStockQuantity(command.getSaleStockQuantity());
+        productStock.setSaledStockQuantity(BigDecimal.ZERO);
+
+        // 2. 保存商品库存到mysql
+        productStockMapper.insert(productStock);
+
+        // // 3. 保存商品库存到redis
+        // this.initRedis(productStock);
     }
 
     /**

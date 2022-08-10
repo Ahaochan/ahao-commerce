@@ -10,13 +10,16 @@ import moe.ahao.domain.entity.BaseDO;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import static moe.ahao.commerce.aftersale.infrastructure.repository.impl.mybatis.data.AfterSaleInfoDO.TABLE_NAME;
+
 /**
  * 订单售后表
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("after_sale_info")
+@TableName(AfterSaleInfoDO.TABLE_NAME)
 public class AfterSaleInfoDO extends BaseDO {
+    public static final String TABLE_NAME = "after_sale_info";
     /**
      * 主键id
      */

@@ -2,24 +2,24 @@ DROP TABLE IF EXISTS `market_coupon`;
 CREATE TABLE `market_coupon`
 (
     `id`               bigint(20)  NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `coupon_id`        varchar(50)          DEFAULT NULL COMMENT '优惠券编号',
-    `coupon_config_id` varchar(50) NOT NULL COMMENT '优惠券配置编号',
-    `user_id`          varchar(50) NOT NULL COMMENT '用户编号',
-    `used`             tinyint(4)  NOT NULL COMMENT '是否使用过这个优惠券，1：使用了，0：未使用',
+    `coupon_id`        varchar(50) DEFAULT NULL COMMENT '优惠券ID',
+    `coupon_config_id` varchar(50) NOT NULL COMMENT '优惠券配置ID',
+    `user_id`          varchar(50) NOT NULL COMMENT '用户ID',
+    `is_used`          tinyint(4) NOT NULL COMMENT '是否使用过这个优惠券，1：使用了，0：未使用',
     `used_time`        datetime             DEFAULT NULL COMMENT '使用优惠券的时间',
     `amount`           int(10)     NOT NULL COMMENT '抵扣金额',
     `create_time`      datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`      datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_coupon_id_user_id` (`coupon_config_id`, `user_id`),
-    KEY `idx_user_id` (`user_id`)
+    KEY `idx_market_coupon_user_id` (`user_id`)
 ) ENGINE = InnoDB COMMENT ='优惠券领取记录表';
 
 DROP TABLE IF EXISTS `market_coupon_config`;
 CREATE TABLE `market_coupon_config`
 (
     `id`               bigint(20)    NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `coupon_config_id` varchar(50)   NOT NULL COMMENT '优惠券配置编号',
+    `coupon_config_id` varchar(50)   NOT NULL COMMENT '优惠券配置ID',
     `name`             varchar(1024) NOT NULL COMMENT '优惠券名称',
     `type`             tinyint(4)    NOT NULL COMMENT '优惠券类型，1：现金券，2：满减券',
     `amount`           int(10)       NOT NULL COMMENT '优惠券抵扣金额',
@@ -39,9 +39,9 @@ DROP TABLE IF EXISTS `market_freight_template`;
 CREATE TABLE `market_freight_template`
 (
     `id`               bigint(20)  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `template_id`      varchar(50) NOT NULL COMMENT '模板编号',
+    `template_id`      varchar(50) NOT NULL COMMENT '模板ID',
     `name`             varchar(50) NOT NULL COMMENT '模板名称',
-    `region_id`        varchar(50) NOT NULL COMMENT '区域编号',
+    `region_id`        varchar(50) NOT NULL COMMENT '区域ID',
     `shipping_amount`  int(10)     NOT NULL COMMENT '标准运费',
     `condition_amount` int(10)     NOT NULL COMMENT '订单满多少钱则免运费',
     `create_time`      datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -65,6 +65,32 @@ CREATE TABLE `undo_log`
     UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
 ) ENGINE = InnoDB;
 
+DROP TABLE IF EXISTS `member_point`;
+CREATE TABLE `member_point` (
+    `id`           bigint      NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `user_id`      varchar(20) NOT NULL COMMENT '用户id',
+    `point`        int         NOT NULL COMMENT '会员积分',
+    `create_time`  datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time`  datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_member_point_user_id` (`user_id`)
+) ENGINE=InnoDB COMMENT='会员中心的会员积分表';
+
+-- ----------------------------
+-- Table structure for membership_member_point
+-- ----------------------------
+DROP TABLE IF EXISTS `member_point_detail`;
+CREATE TABLE `member_point_detail` (
+    `id`              bigint      NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `user_id`         varchar(20) NOT NULL COMMENT '用户id',
+    `member_point_id` bigint      NOT NULL COMMENT '会员积分ID',
+    `old_point`       int         NOT NULL COMMENT '本次变动之前的会员积分',
+    `updated_point`   int         NOT NULL COMMENT '本次变动的会员积分',
+    `new_point`       int         NOT NULL COMMENT '本次变动之后的会员积分',
+    `create_time`     datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time`     datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB COMMENT='会员积分变动的明细表';
 
 INSERT INTO `market_coupon`VALUES (6, '1001001', '2001001', '100', 1, '2021-12-12 12:15:03', 500, '2021-11-26 14:29:43', '2021-12-12 12:15:03');
 INSERT INTO `market_coupon`VALUES (9, '1001002', '2001001', '101', 0, '2021-12-08 21:15:34', 500, '2021-11-26 14:29:43', '2021-12-08 21:15:34');

@@ -94,106 +94,11 @@ public class AfterSaleOrderDetailDTO {
     /**
      * 售后支付信息
      */
-    private List<AfterSalePayDTO> afterSalePays;
+    private List<AfterSaleRefundDTO> afterSalePays;
     /**
      * 售后单日志
      */
     private List<AfterSaleLogDTO> afterSaleLogs;
-
-    /**
-     * 订单售后条目DTO
-     */
-    @Data
-    public static class AfterSaleItemDTO {
-        /**
-         * 售后id
-         */
-        private String afterSaleId;
-        /**
-         * 订单id
-         */
-        private String orderId;
-        /**
-         * sku code
-         */
-        private String skuCode;
-        /**
-         * 商品名
-         */
-        private String productName;
-        /**
-         * 商品图片地址
-         */
-        private String productImg;
-        /**
-         * 商品退货数量
-         */
-        private BigDecimal returnQuantity;
-        /**
-         * 商品总金额
-         */
-        private BigDecimal originAmount;
-        /**
-         * 申请退款金额
-         */
-        private BigDecimal applyRefundAmount;
-        /**
-         * 实际退款金额
-         */
-        private BigDecimal realRefundAmount;
-    }
-
-    /**
-     * 售后支付表
-     */
-    @Data
-    public static class AfterSalePayDTO {
-        /**
-         * 售后退款id
-         */
-        private String afterSaleRefundId;
-        /**
-         * 售后id
-         */
-        private String afterSaleId;
-        /**
-         * 订单id
-         */
-        private String orderId;
-        /**
-         * 售后批次号
-         */
-        private String afterSaleBatchNo;
-        /**
-         * 账户类型
-         */
-        private Integer accountType;
-        /**
-         * 支付类型
-         */
-        private Integer payType;
-        /**
-         * 退款状态
-         */
-        private Integer refundStatus;
-        /**
-         * 退款金额
-         */
-        private BigDecimal refundAmount;
-        /**
-         * 退款支付时间
-         */
-        private Date refundPayTime;
-        /**
-         * 交易单号
-         */
-        private String outTradeNo;
-        /**
-         * 备注
-         */
-        private String remark;
-    }
-
     /**
      * 售后单变更表
      */

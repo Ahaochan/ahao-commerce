@@ -1,7 +1,7 @@
 package moe.ahao.commerce.order.infrastructure.wms;
 
 import moe.ahao.commerce.common.enums.OrderStatusEnum;
-import moe.ahao.commerce.order.infrastructure.domain.dto.WmsShipDTO;
+import moe.ahao.commerce.order.infrastructure.domain.dto.AfterFulfillDTO;
 import moe.ahao.commerce.order.infrastructure.exception.OrderException;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderInfoDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderDeliveryDetailMapper;
@@ -27,7 +27,7 @@ public class OrderOutStockedProcessor extends AbstractWmsShipResultProcessor {
     }
 
     @Override
-    protected void doExecute(WmsShipDTO wmsShipDTO, OrderInfoDO orderInfo) {
+    protected void doExecute(AfterFulfillDTO wmsShipDTO, OrderInfoDO orderInfo) {
         // 增加订单配送表的出库时间
         orderDeliveryDetailMapper.updateOutStockTimeByOrderId(orderInfo.getOrderId(), wmsShipDTO.getOutStockTime());
     }

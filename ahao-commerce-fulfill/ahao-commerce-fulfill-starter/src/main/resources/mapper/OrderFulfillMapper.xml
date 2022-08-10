@@ -8,7 +8,26 @@
         update order_fulfill set deliverer_no = #{delivererNo}, deliverer_name = #{delivererName}, deliverer_phone = #{delivererPhone}
         where fulfill_id = #{fulfillId}
     </update>
+    <update id="updateFulfillStatusByOrderId">
+        update order_fulfill
+        set status = #{toStatus}
+        where order_id = #{orderId} and status = #{fromStatus}
+    </update>
+    <update id="updateFulfillStatusByFulfillId">
+        update order_fulfill
+        set status = #{toStatus}
+        where fulfill_id = #{fulfillId} and status = #{fromStatus}
+    </update>
     <select id="selectOneByOrderId" resultType="moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillDO">
         select * from order_fulfill where order_id = #{orderId}
+    </select>
+    <select id="selectOneByFulfillId" resultType="moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillDO">
+        select * from order_fulfill where fulfill_id = #{fulfillId}
+    </select>
+    <select id="selectListByOrderId" resultType="moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillDO">
+        select * from order_fulfill where order_id = #{orderId}
+    </select>
+    <select id="selectListByFulfillTypeAndStatus" resultType="moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillDO">
+        select * from order_fulfill where order_fulfill_type = #{type} and status = #{status}
     </select>
 </mapper>

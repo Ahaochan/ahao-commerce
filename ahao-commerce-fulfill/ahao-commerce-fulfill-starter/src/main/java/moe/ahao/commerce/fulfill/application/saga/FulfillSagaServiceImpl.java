@@ -4,8 +4,9 @@ package moe.ahao.commerce.fulfill.application.saga;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.fulfill.api.command.ReceiveFulfillCommand;
-import moe.ahao.commerce.fulfill.api.command.ReceiveOrderItemCommand;
 import moe.ahao.commerce.fulfill.application.CancelFulfillAppService;
+import moe.ahao.commerce.fulfill.infrastructure.enums.OrderFulfillStatusEnum;
+import moe.ahao.commerce.fulfill.infrastructure.enums.OrderFulfillTypeEnum;
 import moe.ahao.commerce.fulfill.infrastructure.exception.FulfillExceptionEnum;
 import moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillDO;
 import moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillItemDO;
@@ -86,15 +87,16 @@ public class FulfillSagaServiceImpl implements FulfillSagaService {
     }
 
     private List<OrderFulfillItemDO> convertItems(String fulfillId, ReceiveFulfillCommand command) {
-        List<ReceiveOrderItemCommand> list1 = command.getReceiveOrderItems();
+        List<ReceiveFulfillCommand.ReceiveOrderItem> list1 = command.getReceiveOrderItems();
         if (CollectionUtils.isEmpty(list1)) {
             return Collections.emptyList();
         }
         List<OrderFulfillItemDO> list2 = new ArrayList<>(list1.size());
-        for (ReceiveOrderItemCommand item1 : list1) {
+        for (ReceiveFulfillCommand.ReceiveOrderItem item1 : list1) {
             OrderFulfillItemDO item2 = new OrderFulfillItemDO();
             item2.setFulfillId(fulfillId);
             item2.setSkuCode(item1.getSkuCode());
+            item2.setProductType(item1.getProductType());
             item2.setProductName(item1.getProductName());
             item2.setSalePrice(item1.getSalePrice());
             item2.setSaleQuantity(item1.getSaleQuantity());
@@ -116,6 +118,8 @@ public class FulfillSagaServiceImpl implements FulfillSagaService {
         data.setOrderId(command.getOrderId());
         data.setSellerId(command.getSellerId());
         data.setUserId(command.getUserId());
+        data.setStatus(OrderFulfillStatusEnum.FULFILL.getCode());
+        data.setOrderFulfillType(OrderFulfillTypeEnum.getByOrderType(command.getOrderType()).getCode());
         data.setDeliveryType(command.getDeliveryType());
         data.setReceiverName(command.getReceiverName());
         data.setReceiverPhone(command.getReceiverPhone());

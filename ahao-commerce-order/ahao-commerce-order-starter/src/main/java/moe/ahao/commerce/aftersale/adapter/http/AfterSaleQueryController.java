@@ -4,7 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.aftersale.api.AfterSaleQueryFeignApi;
 import moe.ahao.commerce.aftersale.api.dto.AfterSaleOrderDetailDTO;
 import moe.ahao.commerce.aftersale.api.dto.AfterSaleOrderListDTO;
-import moe.ahao.commerce.aftersale.api.query.AfterSaleQuery;
+import moe.ahao.commerce.aftersale.api.query.AfterSaleDetailQuery;
+import moe.ahao.commerce.aftersale.api.query.AfterSalePageQuery;
 import moe.ahao.commerce.aftersale.application.AfterSaleQueryService;
 import moe.ahao.domain.entity.PagingInfo;
 import moe.ahao.domain.entity.Result;
@@ -23,14 +24,14 @@ public class AfterSaleQueryController implements AfterSaleQueryFeignApi {
     private AfterSaleQueryService afterSaleQueryService;
 
     @Override
-    public Result<PagingInfo<AfterSaleOrderListDTO>> listAfterSales(AfterSaleQuery query) {
-        PagingInfo<AfterSaleOrderListDTO> page = afterSaleQueryService.executeListQuery(query);
+    public Result<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSales(AfterSalePageQuery query) {
+        PagingInfo<AfterSaleOrderDetailDTO> page = afterSaleQueryService.queryV2(query);
         return Result.success(page);
     }
 
     @Override
-    public Result<AfterSaleOrderDetailDTO> afterSaleDetail(String afterSaleId) {
-        AfterSaleOrderDetailDTO dto = afterSaleQueryService.afterSaleDetail(afterSaleId);
+    public Result<AfterSaleOrderDetailDTO> afterSaleDetail(AfterSaleDetailQuery query) {
+        AfterSaleOrderDetailDTO dto = afterSaleQueryService.afterSaleDetail(query.getAfterSaleId());
         return Result.success(dto);
     }
 }

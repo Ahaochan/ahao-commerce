@@ -11,6 +11,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
 @Service
 public class ModifyProductStockAppService {
     @Autowired
-    private ModifyProductStockProcessor modifyProductStockProcessor;
+    private ModifyProductStockAppService _this;
     @Autowired
     private ProductStockMapper productStockMapper;
     @Autowired
@@ -49,7 +50,7 @@ public class ModifyProductStockAppService {
             throw InventoryExceptionEnum.INCREASE_PRODUCT_SKU_STOCK_ERROR.msg();
         }
         try {
-            modifyProductStockProcessor.doModifyWithTx(productStock, stockIncremental);
+            _this.doModifyWithTx(productStock, stockIncremental);
         } finally {
             lock.unlock();
         }
@@ -72,5 +73,34 @@ public class ModifyProductStockAppService {
         if (stockIncremental.compareTo(BigDecimal.ZERO) == 0) {
             throw InventoryExceptionEnum.SALE_STOCK_INCREMENTAL_QUANTITY_CANNOT_BE_ZERO.msg();
         }
+    }
+
+    /**
+     * 调整商品库存
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void doModifyWithTx(ProductStockDO productStock, BigDecimal stockIncremental) {
+        // 1. 更新mysql商品可销售库存数量
+        String skuCode = productStock.getSkuCode();
+        BigDecimal originSaleStockQuantity = productStock.getSaleStockQuantity();
+        int num = productStockMapper.modifyProductStock(skuCode, originSaleStockQuantity, stockIncremental);
+        if (num <= 0) {
+            throw InventoryExceptionEnum.INCREASE_PRODUCT_SKU_STOCK_ERROR.msg();
+        }
+
+        // // 2. lua脚本更新redis商品可销售库存数量
+        // String luaScript = LuaScript.MODIFY_PRODUCT_STOCK;
+        // String productStockKey = RedisCacheSupport.buildProductStockKey(skuCode);
+        // String saleStockKey = RedisCacheSupport.SALE_STOCK;
+        // Long result = RedisHelper.getStringRedisTemplate().execute(new DefaultRedisScript<>(luaScript, Long.class),
+        //     Arrays.asList(productStockKey, saleStockKey), String.valueOf(originSaleStockQuantity), String.valueOf(stockIncremental));
+        //
+        // // 3. redis更新异常, 以mysql的数据为准
+        // if (result == null || result < 0) {
+        //     RedisHelper.del(saleStockKey);
+        //
+        //     ProductStockDO productStockInDB = productStockMapper.selectOneBySkuCode(skuCode);
+        //     addProductStockProcessor.initRedis(productStockInDB);
+        // }
     }
 }

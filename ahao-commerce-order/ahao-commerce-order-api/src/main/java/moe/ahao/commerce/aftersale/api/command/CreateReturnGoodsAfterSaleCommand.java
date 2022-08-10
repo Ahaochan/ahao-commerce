@@ -2,6 +2,8 @@ package moe.ahao.commerce.aftersale.api.command;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 /**
  * 售后退货入参
  */
@@ -31,4 +33,8 @@ public class CreateReturnGoodsAfterSaleCommand {
      * 退货sku编号
      */
     private String skuCode;
+    /**
+     * 退货数量
+     */
+    private BigDecimal returnQuantity;
 }

@@ -13,7 +13,7 @@ public class ActualRefundEvent {
      */
     private String orderId;
     /**
-     * 当前订单是否是退最后一笔
+     * 区分执行实际退款的消息类型: 1：取消订单整笔退款 or 2.发起售后退货
      */
-    private boolean lastReturnGoods = false;
+    private Integer afterSaleType;
 }

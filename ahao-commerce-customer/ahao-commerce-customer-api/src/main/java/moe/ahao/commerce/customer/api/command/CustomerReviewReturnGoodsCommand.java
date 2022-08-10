@@ -20,16 +20,7 @@ public class CustomerReviewReturnGoodsCommand {
      */
     private Integer auditResult;
     /**
-     * 售后支付单id
-     */
-    private String afterSaleRefundId;
-    /**
-     * 订单id
-     */
-    private String orderId;
-    /**
      * 客服审核结果描述信息
      */
     private String auditResultDesc;
-
 }

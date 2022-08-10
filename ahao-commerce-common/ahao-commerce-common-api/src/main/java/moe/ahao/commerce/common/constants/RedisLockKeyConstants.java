@@ -11,7 +11,9 @@ public class RedisLockKeyConstants {
 
     public static final String ORDER_FULFILL_KEY = "#ORDER_FULFILL_KEY:";
 
-    public static final String ORDER_WMS_RESULT_KEY = "#ORDER_WMS_RESULT_KEY:";
+    public static final String FULFILL_KEY = "#FULFILL_KEY:";
+
+    public static final String ORDER_AFTER_FULFILL_EVENT_KEY = "#ORDER_AFTER_FULFILL_EVENT_KEY:";
 
     public static final String REFUND_KEY = "#REFUND_KEY:";
 
@@ -47,4 +49,9 @@ public class RedisLockKeyConstants {
      * 释放优惠券锁
      */
     public static final String RELEASE_COUPON_KEY = "#RELEASE_COUPON_KEY:";
+
+    /**
+     * 更新用户积分锁
+     */
+    public static final String UPDATE_USER_POINT_KEY = "#UPDATE_USER_POINT_KEY:";
 }

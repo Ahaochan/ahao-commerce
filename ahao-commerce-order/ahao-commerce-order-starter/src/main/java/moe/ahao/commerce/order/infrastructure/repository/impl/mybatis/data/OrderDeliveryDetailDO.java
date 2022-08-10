@@ -16,9 +16,11 @@ import java.util.Date;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("order_delivery_detail")
+@TableName(OrderDeliveryDetailDO.TABLE_NAME)
 @NoArgsConstructor
 public class OrderDeliveryDetailDO extends BaseDO {
+    public static final String TABLE_NAME = "order_delivery_detail";
+
     /**
      * 主键id
      */

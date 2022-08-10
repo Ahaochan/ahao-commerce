@@ -6,7 +6,7 @@ spring.cloud.nacos.config.file-extension: yaml
 spring.cloud.nacos.config.username: nacos
 spring.cloud.nacos.config.password: nacos
 spring.cloud.nacos.config.shared-configs:
-  - data-id: application-shared-seata.yml
-    group: DEFAULT_GROUP
-    refresh: false
+#  - data-id: application-shared-seata.yml
+#    group: DEFAULT_GROUP
+#    refresh: false
 ################################################## Nacos 配置 ##################################################

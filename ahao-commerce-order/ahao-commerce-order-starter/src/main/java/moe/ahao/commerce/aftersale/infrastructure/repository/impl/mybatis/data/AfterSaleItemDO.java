@@ -14,8 +14,9 @@ import java.math.BigDecimal;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("after_sale_item")
+@TableName(AfterSaleItemDO.TABLE_NAME)
 public class AfterSaleItemDO extends BaseDO {
+    public static final String TABLE_NAME = "after_sale_item";
     /**
      * 主键id
      */
@@ -57,4 +58,13 @@ public class AfterSaleItemDO extends BaseDO {
      * 实际退款金额
      */
     private BigDecimal realRefundAmount;
+    /**
+     * 本条目退货完成标记 10:购买的sku未全部退货 20:购买的sku已全部退货
+     */
+    private Integer returnCompletionMark;
+
+    /**
+     * 售后条目类型 10:售后订单条目 20:尾笔条目退优惠券 30:尾笔条目退运费
+     */
+    private Integer afterSaleItemType;
 }

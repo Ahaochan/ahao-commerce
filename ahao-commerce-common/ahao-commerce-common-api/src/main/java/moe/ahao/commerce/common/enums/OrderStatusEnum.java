@@ -21,7 +21,7 @@ public enum OrderStatusEnum {
     OUT_STOCK(40, "出库"),
     DELIVERY(50, "配送中"),
     SIGNED(60, "已签收"),
-    CANCELED(70, "已取消"),
+    CANCELLED(70, "已取消"),
     REFUSED(100, "已拒收"),
     INVALID(127, "无效订单");
     private final Integer code;
@@ -47,7 +47,7 @@ public enum OrderStatusEnum {
      * 可以移除的订单状态
      */
     public static List<Integer> canRemoveStatus() {
-        return Arrays.asList(SIGNED.code, CANCELED.code, REFUSED.code, INVALID.code);
+        return Arrays.asList(SIGNED.code, CANCELLED.code, REFUSED.code, INVALID.code);
     }
 
     /**

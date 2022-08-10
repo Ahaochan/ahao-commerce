@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS `after_sale_info`;
 CREATE TABLE `after_sale_info` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
   `business_identifier` tinyint(4) DEFAULT NULL COMMENT '接入方业务线标识  1, "自营商城"',
-  `after_sale_id` varchar(50) NOT NULL COMMENT '售后id',
+  `after_sale_id` varchar (64) NOT NULL COMMENT '售后单号',
   `order_id` varchar(50) NOT NULL DEFAULT '' COMMENT '订单号',
   `order_source_channel` tinyint(4) NOT NULL COMMENT '订单来源渠道',
   `user_id` varchar(20) NOT NULL COMMENT '购买用户id',
@@ -44,7 +44,7 @@ INSERT INTO `after_sale_info` VALUES (127, 1, 2021121032907776105, '102112103290
 DROP TABLE IF EXISTS `after_sale_item`;
 CREATE TABLE `after_sale_item` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `after_sale_id` varchar(50) NOT NULL COMMENT '售后id',
+  `after_sale_id` varchar(64) NOT NULL COMMENT '售后id',
   `order_id` varchar(50) NOT NULL DEFAULT '' COMMENT '订单id',
   `sku_code` varchar(20) NOT NULL DEFAULT '' COMMENT 'sku id',
   `product_name` varchar(1024) NOT NULL COMMENT '商品名',
@@ -55,8 +55,10 @@ CREATE TABLE `after_sale_item` (
   `real_refund_amount` int(11) NOT NULL COMMENT '实际退款金额',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) ,
-  KEY `idx_after_sale_item_order_id` (`order_id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_after_sale_item_order_id` (`order_id`),
+  KEY `idx_after_sale_item_after_sale_id` (`after_sale_id`),
+  KEY `idx_after_sale_item_sku_code` (`sku_code`)
 ) ENGINE=InnoDB COMMENT='订单售后条目表';
 
 -- ----------------------------
@@ -75,7 +77,8 @@ INSERT INTO `after_sale_item` VALUES (6, 2021121032907776105, '10211210329095681
 DROP TABLE IF EXISTS `after_sale_log`;
 CREATE TABLE `after_sale_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `after_sale_id` varchar(50) NOT NULL COMMENT '售后单号',
+  `after_sale_id` varchar (64) NOT NULL COMMENT '售后单号',
+  `order_id` varchar(50) default '' not null comment '订单号',
   `pre_status` tinyint(4) NOT NULL COMMENT '前一个状态',
   `current_status` tinyint(4) NOT NULL COMMENT '当前状态',
   `remark` varchar(1024) NOT NULL COMMENT '备注',
@@ -87,12 +90,12 @@ CREATE TABLE `after_sale_log` (
 -- ----------------------------
 -- Records of after_sale_log
 -- ----------------------------
-INSERT INTO `after_sale_log` VALUES (40, '2021120932956945103', 0, 20, '超时未支付自动取消', '2021-12-09 20:41:17', '2021-12-09 20:41:17');
-INSERT INTO `after_sale_log` VALUES (41, '2021120932956945103', 20, 40, '售后退款中', '2021-12-09 20:41:18', '2021-12-09 20:41:18');
-INSERT INTO `after_sale_log` VALUES (42, '2021121032907520104', 0, 20, '超时未支付自动取消', '2021-12-10 12:06:49', '2021-12-10 12:06:49');
-INSERT INTO `after_sale_log` VALUES (43, '2021121032907520104', 20, 40, '售后退款中', '2021-12-10 12:06:49', '2021-12-10 12:06:49');
-INSERT INTO `after_sale_log` VALUES (44, '2021121032907776105', 0, 20, '超时未支付自动取消', '2021-12-10 12:53:59', '2021-12-10 12:53:59');
-INSERT INTO `after_sale_log` VALUES (45, '2021121032907776105', 20, 40, '售后退款中', '2021-12-10 12:53:59', '2021-12-10 12:53:59');
+INSERT INTO `after_sale_log` VALUES (40, '2021120932956945103', '1021120932958737103', 0, 20, '超时未支付自动取消', '2021-12-09 20:41:17', '2021-12-09 20:41:17');
+INSERT INTO `after_sale_log` VALUES (41, '2021120932956945103', '1021120932958737103', 20, 40, '售后退款中', '2021-12-09 20:41:18', '2021-12-09 20:41:18');
+INSERT INTO `after_sale_log` VALUES (42, '2021121032907520104', '1021121032958993104', 0, 20, '超时未支付自动取消', '2021-12-10 12:06:49', '2021-12-10 12:06:49');
+INSERT INTO `after_sale_log` VALUES (43, '2021121032907520104', '1021121032958993104', 20, 40, '售后退款中', '2021-12-10 12:06:49', '2021-12-10 12:06:49');
+INSERT INTO `after_sale_log` VALUES (44, '2021121032907776105', '1021121032909568105', 0, 20, '超时未支付自动取消', '2021-12-10 12:53:59', '2021-12-10 12:53:59');
+INSERT INTO `after_sale_log` VALUES (45, '2021121032907776105', '1021121032909568105', 20, 40, '售后退款中', '2021-12-10 12:53:59', '2021-12-10 12:53:59');
 
 -- ----------------------------
 -- Table structure for after_sale_refund
@@ -231,29 +234,22 @@ INSERT INTO `order_amount_detail` VALUES (63, '1021121232909584100', 1, '1021121
 -- ----------------------------
 DROP TABLE IF EXISTS `order_auto_no`;
 CREATE TABLE `order_auto_no` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `id`           bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `biz_tag`      varchar(32) NOT NULL COMMENT '业务标识',
+  `max_id`       bigint(20) NOT NULL COMMENT '最大ID',
+  `step`         int(11) NOT NULL COMMENT '步长',
+  `desc`         varchar(255) DEFAULT NULL COMMENT '备注',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_biz_tag` (`biz_tag`)
 ) ENGINE=InnoDB COMMENT='订单编号表';
 
 -- ----------------------------
 -- Records of order_auto_no
 -- ----------------------------
-INSERT INTO `order_auto_no` VALUES (25, '2021-12-08 10:33:51', '2021-12-08 10:33:51');
-INSERT INTO `order_auto_no` VALUES (26, '2021-12-08 21:11:46', '2021-12-08 21:11:46');
-INSERT INTO `order_auto_no` VALUES (27, '2021-12-08 22:54:23', '2021-12-08 22:54:23');
-INSERT INTO `order_auto_no` VALUES (28, '2021-12-09 11:20:33', '2021-12-09 11:20:33');
-INSERT INTO `order_auto_no` VALUES (29, '2021-12-09 11:21:07', '2021-12-09 11:21:07');
-INSERT INTO `order_auto_no` VALUES (30, '2021-12-09 20:41:17', '2021-12-09 20:41:17');
-INSERT INTO `order_auto_no` VALUES (31, '2021-12-10 11:35:45', '2021-12-10 11:35:45');
-INSERT INTO `order_auto_no` VALUES (32, '2021-12-10 12:06:49', '2021-12-10 12:06:49');
-INSERT INTO `order_auto_no` VALUES (33, '2021-12-10 12:23:00', '2021-12-10 12:23:00');
-INSERT INTO `order_auto_no` VALUES (34, '2021-12-10 12:53:59', '2021-12-10 12:53:59');
-INSERT INTO `order_auto_no` VALUES (35, '2021-12-11 02:14:13', '2021-12-11 02:14:13');
-INSERT INTO `order_auto_no` VALUES (36, '2021-12-11 17:36:49', '2021-12-11 17:36:49');
-INSERT INTO `order_auto_no` VALUES (37, '2021-12-12 11:38:01', '2021-12-12 11:38:01');
-INSERT INTO `order_auto_no` VALUES (38, '2021-12-12 12:35:10', '2021-12-12 12:35:10');
+INSERT INTO `order_auto_no` VALUES (1, '10', 1, 1000, NULL, now(), now());
+INSERT INTO `order_auto_no` VALUES (2, '20', 1, 1000, NULL, now(), now());
 
 -- ----------------------------
 -- Table structure for order_delivery_detail
@@ -366,6 +362,7 @@ CREATE TABLE `order_item` (
   `product_unit` varchar(10) NOT NULL COMMENT '商品单位',
   `purchase_price` int(11) DEFAULT NULL COMMENT '采购成本价',
   `seller_id` varchar(50) DEFAULT NULL COMMENT '卖家编号',
+  `ext_json`       varchar(1024) DEFAULT NULL COMMENT '扩展信息',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -378,18 +375,18 @@ CREATE TABLE `order_item` (
 -- ----------------------------
 -- Records of order_item
 -- ----------------------------
-INSERT INTO `order_item` VALUES (10, '1021120832956929100', '1021120832956929100_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '2021-12-08 21:15:36', '2021-12-08 21:15:36');
-INSERT INTO `order_item` VALUES (11, '1021120832956929100', '1021120832956929100_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '2021-12-08 21:15:36', '2021-12-08 21:15:36');
-INSERT INTO `order_item` VALUES (12, '1021120832958977102', '1021120832958977102_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '2021-12-08 22:58:57', '2021-12-08 22:58:57');
-INSERT INTO `order_item` VALUES (13, '1021120832958977102', '1021120832958977102_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '2021-12-08 22:58:57', '2021-12-08 22:58:57');
-INSERT INTO `order_item` VALUES (14, '1021120932958737103', '1021120932958737103_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '2021-12-09 20:11:16', '2021-12-09 20:11:16');
-INSERT INTO `order_item` VALUES (15, '1021120932958737103', '1021120932958737103_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '2021-12-09 20:11:16', '2021-12-09 20:11:16');
-INSERT INTO `order_item` VALUES (16, '1021121032958993104', '1021121032958993104_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '2021-12-10 11:36:47', '2021-12-10 11:36:47');
-INSERT INTO `order_item` VALUES (17, '1021121032958993104', '1021121032958993104_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '2021-12-10 11:36:47', '2021-12-10 11:36:47');
-INSERT INTO `order_item` VALUES (18, '1021121032909568105', '1021121032909568105_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '2021-12-10 12:23:58', '2021-12-10 12:23:58');
-INSERT INTO `order_item` VALUES (19, '1021121032909568105', '1021121032909568105_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '2021-12-10 12:23:58', '2021-12-10 12:23:58');
-INSERT INTO `order_item` VALUES (20, '1021121232909584100', '1021121232909584100_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '2021-12-12 12:15:04', '2021-12-12 12:15:04');
-INSERT INTO `order_item` VALUES (21, '1021121232909584100', '1021121232909584100_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '2021-12-12 12:15:04', '2021-12-12 12:15:04');
+INSERT INTO `order_item` VALUES (10, '1021120832956929100', '1021120832956929100_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '101', '', '2021-12-08 21:15:36', '2021-12-08 21:15:36');
+INSERT INTO `order_item` VALUES (11, '1021120832956929100', '1021120832956929100_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '', '2021-12-08 21:15:36', '2021-12-08 21:15:36');
+INSERT INTO `order_item` VALUES (12, '1021120832958977102', '1021120832958977102_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '', '101', '2021-12-08 22:58:57', '2021-12-08 22:58:57');
+INSERT INTO `order_item` VALUES (13, '1021120832958977102', '1021120832958977102_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '', '2021-12-08 22:58:57', '2021-12-08 22:58:57');
+INSERT INTO `order_item` VALUES (14, '1021120932958737103', '1021120932958737103_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '', '101', '2021-12-09 20:11:16', '2021-12-09 20:11:16');
+INSERT INTO `order_item` VALUES (15, '1021120932958737103', '1021120932958737103_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '', '2021-12-09 20:11:16', '2021-12-09 20:11:16');
+INSERT INTO `order_item` VALUES (16, '1021121032958993104', '1021121032958993104_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '', '101', '2021-12-10 11:36:47', '2021-12-10 11:36:47');
+INSERT INTO `order_item` VALUES (17, '1021121032958993104', '1021121032958993104_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '', '2021-12-10 11:36:47', '2021-12-10 11:36:47');
+INSERT INTO `order_item` VALUES (18, '1021121032909568105', '1021121032909568105_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '', '101', '2021-12-10 12:23:58', '2021-12-10 12:23:58');
+INSERT INTO `order_item` VALUES (19, '1021121032909568105', '1021121032909568105_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '', '2021-12-10 12:23:58', '2021-12-10 12:23:58');
+INSERT INTO `order_item` VALUES (20, '1021121232909584100', '1021121232909584100_001', 1, '1001010', 'test.img', '测试商品', '10101010', 10, 1000, 10000, 9504, '个', 500, '', '101', '2021-12-12 12:15:04', '2021-12-12 12:15:04');
+INSERT INTO `order_item` VALUES (21, '1021121232909584100', '1021121232909584100_002', 1, '1001011', 'demo.img', 'demo商品', '10101011', 1, 100, 100, 96, '瓶', 50, '101', '', '2021-12-12 12:15:04', '2021-12-12 12:15:04');
 
 -- ----------------------------
 -- Table structure for order_operate_log
@@ -519,3 +516,41 @@ CREATE TABLE `undo_log` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
 ) ENGINE=InnoDB;
+
+DROP TABLE IF EXISTS `order_cancel_scheduled_task`;
+CREATE TABLE order_cancel_scheduled_task (
+  `id`           bigint(20)  AUTO_INCREMENT COMMENT '主键',
+  `order_id`     varchar(50) NOT NULL COMMENT '订单id',
+  `expire_time`  datetime    NOT NULL COMMENT '订单支付截止时间',
+  `create_time`      datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time`      datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_cancel_task_order_id`(`order_id`),
+  KEY `idx_cancel_task_expire_time`(`expire_time`)
+) ENGINE = InnoDB COMMENT ='定时执行订单取消兜底任务表';
+
+CREATE TABLE `ahao_tend_consistency_task` (
+    `id`                     bigint       NOT NULL AUTO_INCREMENT COMMENT '主键自增',
+    `task_id`                varchar(500) NOT NULL COMMENT '用户自定义的任务名称，如果没有则使用方法签名',
+    `task_status`            int          NOT NULL DEFAULT '0' COMMENT '执行状态',
+    `execute_times`          int          NOT NULL COMMENT '执行次数',
+    `execute_time`           bigint       NOT NULL COMMENT '执行时间',
+    `parameter_types`        varchar(255) NOT NULL COMMENT '参数的类路径名称',
+    `method_name`            varchar(100) NOT NULL COMMENT '方法名',
+    `method_sign_name`       varchar(200) NOT NULL DEFAULT '' COMMENT '方法签名',
+    `execute_interval_sec`   int          NOT NULL DEFAULT '60' COMMENT '执行间隔秒',
+    `delay_time`             int          NOT NULL DEFAULT '60' COMMENT '延迟时间：单位秒',
+    `task_parameter`         text         NOT NULL COMMENT '任务参数',
+    `performance_way`        int          NOT NULL COMMENT '执行模式：1、立即执行 2、调度执行',
+    `thread_way`             int          NOT NULL COMMENT '线程模型 1、异步 2、同步',
+    `error_msg`              varchar(200) NOT NULL DEFAULT '' COMMENT '执行的error信息',
+    `alert_expression`       varchar(100)          DEFAULT NULL COMMENT '告警表达式',
+    `alert_action_bean_name` varchar(255)          DEFAULT NULL COMMENT '告警逻辑的的执行beanName',
+    `fallback_class_name`    varchar(255)          DEFAULT NULL COMMENT '降级逻辑的的类路径',
+    `fallback_error_msg`     varchar(200)          DEFAULT NULL COMMENT '降级失败时的错误信息',
+    `shard_key`              bigint                DEFAULT '0' COMMENT '任务分片键',
+    `gmt_create`             datetime     NOT NULL COMMENT '创建时间',
+    `gmt_modified`           datetime     NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_id_shard_key` (`id`, `shard_key`)
+) ENGINE = InnoDB;

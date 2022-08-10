@@ -1,7 +1,7 @@
 package moe.ahao.commerce.market.api;
 
 import moe.ahao.commerce.market.api.command.LockUserCouponCommand;
-import moe.ahao.commerce.market.api.command.ReleaseUserCouponEvent;
+import moe.ahao.commerce.market.api.command.ReleaseUserCouponCommand;
 import moe.ahao.commerce.market.api.dto.UserCouponDTO;
 import moe.ahao.commerce.market.api.query.GetUserCouponQuery;
 import moe.ahao.domain.entity.Result;
@@ -27,5 +27,5 @@ public interface CouponFeignApi {
      * 释放用户已使用的优惠券
      */
     @PostMapping("/release")
-    Result<Boolean> release(@RequestBody ReleaseUserCouponEvent command);
+    Result<Boolean> release(@RequestBody ReleaseUserCouponCommand command);
 }

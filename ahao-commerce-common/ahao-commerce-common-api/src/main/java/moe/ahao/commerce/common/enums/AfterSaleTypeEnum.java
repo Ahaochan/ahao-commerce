@@ -12,8 +12,8 @@ import java.util.Set;
 @Getter
 @AllArgsConstructor
 public enum AfterSaleTypeEnum {
-    RETURN_MONEY(1, "退款"),
-    RETURN_GOODS(2, "退货");
+    RETURN_MONEY(1, "整笔退款"),
+    RETURN_GOODS(2, "售后退货");
     private final Integer code;
     private final String name;
 

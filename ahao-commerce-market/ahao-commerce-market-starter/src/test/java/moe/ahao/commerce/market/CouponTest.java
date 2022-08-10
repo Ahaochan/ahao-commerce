@@ -1,7 +1,7 @@
 package moe.ahao.commerce.market;
 
 import moe.ahao.commerce.market.api.command.LockUserCouponCommand;
-import moe.ahao.commerce.market.api.command.ReleaseUserCouponEvent;
+import moe.ahao.commerce.market.api.command.ReleaseUserCouponCommand;
 import moe.ahao.commerce.market.api.dto.UserCouponDTO;
 import moe.ahao.commerce.market.api.query.GetUserCouponQuery;
 import moe.ahao.commerce.market.application.CouponQueryService;
@@ -18,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = MarketApplication.class)
 @ActiveProfiles("test")
 public class CouponTest {
@@ -64,7 +63,7 @@ public class CouponTest {
         Boolean locked = lockUserCouponService.lockUserCoupon(command1);
         Assertions.assertTrue(locked);
 
-        ReleaseUserCouponEvent command2 = new ReleaseUserCouponEvent();
+        ReleaseUserCouponCommand command2 = new ReleaseUserCouponCommand();
         command2.setUserId(command1.getUserId());
         command2.setCouponId(command1.getCouponId());
         command2.setOrderId(command1.getOrderId());

@@ -2,12 +2,12 @@ package moe.ahao.commerce.fulfill;
 
 import moe.ahao.commerce.common.enums.OrderStatusChangeEnum;
 import moe.ahao.commerce.common.enums.PayTypeEnum;
+import moe.ahao.commerce.common.enums.ProductTypeEnum;
 import moe.ahao.commerce.fulfill.api.command.ReceiveFulfillCommand;
-import moe.ahao.commerce.fulfill.api.command.ReceiveOrderItemCommand;
-import moe.ahao.commerce.fulfill.api.event.OrderDeliveredWmsEvent;
-import moe.ahao.commerce.fulfill.api.event.OrderOutStockWmsEvent;
-import moe.ahao.commerce.fulfill.api.event.OrderSignedWmsEvent;
-import moe.ahao.commerce.fulfill.api.event.TriggerOrderWmsShipEvent;
+import moe.ahao.commerce.fulfill.api.event.OrderDeliveredEvent;
+import moe.ahao.commerce.fulfill.api.event.OrderOutStockEvent;
+import moe.ahao.commerce.fulfill.api.event.OrderSignedEvent;
+import moe.ahao.commerce.fulfill.api.event.TriggerOrderAfterFulfillEvent;
 import moe.ahao.commerce.fulfill.application.CancelFulfillAppService;
 import moe.ahao.commerce.fulfill.application.ReceiveFulfillAppService;
 import moe.ahao.commerce.fulfill.application.TriggerOrderWmsShipAppService;
@@ -37,7 +37,6 @@ import java.util.Date;
 
 import static org.mockito.ArgumentMatchers.any;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = FulfillApplication.class)
 @ActiveProfiles("test")
 
@@ -66,7 +65,7 @@ public class FulfillApiTest {
         PickDTO pickDTO = new PickDTO("订单号");
         Mockito.when(wmsFeignClient.pickGoods(any())).thenReturn(Result.success(pickDTO));
 
-        SendOutDTO sendOutDTO = new SendOutDTO("订单号", "物流单号");
+        SendOutDTO sendOutDTO = new SendOutDTO("订单号", "物流单号", "配送员Code", "配送员姓名", "配送员手机号");
         Mockito.when(tmsFeignClient.sendOut(any())).thenReturn(Result.success(sendOutDTO));
     }
 
@@ -99,7 +98,7 @@ public class FulfillApiTest {
         command.setWmsException(null);
         command.setTmsException(null);
         command.setReceiveOrderItems(Arrays.asList(
-            new ReceiveOrderItemCommand("skuCode411", "压测数据411", new BigDecimal("1000"), new BigDecimal("10"), "个", new BigDecimal("10000"), new BigDecimal("10000"))
+            new ReceiveFulfillCommand.ReceiveOrderItem("skuCode411", ProductTypeEnum.NORMAL.getCode(), "压测数据411", new BigDecimal("1000"), new BigDecimal("10"), "个", new BigDecimal("10000"), new BigDecimal("10000"), "")
         ));
 
         receiveFulfillAppService.fulfill(command);
@@ -110,24 +109,24 @@ public class FulfillApiTest {
     public void triggerOrderWmsShipEvent() throws Exception {
         String orderId = "1011250000000010000";
         OrderStatusChangeEnum orderStatusChange = OrderStatusChangeEnum.ORDER_OUT_STOCKED;
-        OrderOutStockWmsEvent wmsEvent1 = new OrderOutStockWmsEvent();
+        OrderOutStockEvent wmsEvent1 = new OrderOutStockEvent();
         wmsEvent1.setOrderId(orderId);
         wmsEvent1.setOutStockTime(new Date());
 
-        TriggerOrderWmsShipEvent request = new TriggerOrderWmsShipEvent(
+        TriggerOrderAfterFulfillEvent request = new TriggerOrderAfterFulfillEvent(
             orderId, "11", orderStatusChange, wmsEvent1
         );
         triggerOrderWmsShipAppService.trigger(request);
 
 
         orderStatusChange = OrderStatusChangeEnum.ORDER_DELIVERED;
-        OrderDeliveredWmsEvent wmsEvent2 = new OrderDeliveredWmsEvent();
+        OrderDeliveredEvent wmsEvent2 = new OrderDeliveredEvent();
         wmsEvent2.setOrderId(orderId);
         wmsEvent2.setDelivererNo("rc2019");
         wmsEvent2.setDelivererName("张三");
         wmsEvent2.setDelivererPhone("19100012112");
 
-        request = new TriggerOrderWmsShipEvent(
+        request = new TriggerOrderAfterFulfillEvent(
             orderId, "11", orderStatusChange, wmsEvent2
         );
 
@@ -135,11 +134,11 @@ public class FulfillApiTest {
 
 
         orderStatusChange = OrderStatusChangeEnum.ORDER_SIGNED;
-        OrderSignedWmsEvent wmsEvent3 = new OrderSignedWmsEvent();
+        OrderSignedEvent wmsEvent3 = new OrderSignedEvent();
         wmsEvent3.setOrderId(orderId);
         wmsEvent3.setSignedTime(new Date());
 
-        request = new TriggerOrderWmsShipEvent(
+        request = new TriggerOrderAfterFulfillEvent(
             orderId, "11", orderStatusChange, wmsEvent3
         );
 

@@ -29,6 +29,14 @@ public interface OrderPaymentDetailMapper extends BaseMapper<OrderPaymentDetailD
      * 更新支付明细的支付状态
      */
     int updatePayStatusByOrderIds(@Param("orderIds") List<String> orderIds, @Param("payStatus") Integer payStatus);
+    /**
+     * 更新支付明细的支付状态
+     */
+    int updatePayStatusAndPayTimeByOrderId(@Param("orderId") String orderId, @Param("payStatus") Integer payStatus, @Param("payTime") Date payTime);
+    /**
+     * 更新支付明细的支付状态
+     */
+    int updatePayStatusAndPayTimeByOrderIds(@Param("orderIds") List<String> orderIds, @Param("payStatus") Integer payStatus, @Param("payTime") Date payTime);
 
     /**
      * 根据订单号查询支付明细

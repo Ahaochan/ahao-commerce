@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderCancelScheduledTaskMapper">
+    <delete id="deleteByOrderId">
+        delete from order_cancel_scheduled_task where order_id = #{orderId}
+    </delete>
+    <select id="selectOneByOrderId" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderCancelScheduledTaskDO">
+        select * from order_cancel_scheduled_task where order_id = #{orderId}
+    </select>
+    <select id="selectListByExpireTime" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderCancelScheduledTaskDO">
+        select * from order_cancel_scheduled_task where expire_time <![CDATA[<=]]> #{expireTime}
+    </select>
+</mapper>

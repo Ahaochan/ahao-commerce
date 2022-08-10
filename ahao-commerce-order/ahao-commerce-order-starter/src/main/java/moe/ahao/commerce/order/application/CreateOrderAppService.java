@@ -2,33 +2,27 @@ package moe.ahao.commerce.order.application;
 
 
 import lombok.extern.slf4j.Slf4j;
-import moe.ahao.commerce.aftersale.infrastructure.enums.OrderCancelTypeEnum;
-import moe.ahao.commerce.common.constants.RocketMqConstant;
-import moe.ahao.commerce.common.enums.AmountTypeEnum;
-import moe.ahao.commerce.common.enums.OrderStatusEnum;
-import moe.ahao.commerce.common.enums.PayTypeEnum;
+import moe.ahao.commerce.common.enums.*;
 import moe.ahao.commerce.common.infrastructure.event.PayOrderTimeoutEvent;
-import moe.ahao.commerce.common.infrastructure.rocketmq.RocketDelayedLevel;
 import moe.ahao.commerce.market.api.dto.CalculateOrderAmountDTO;
 import moe.ahao.commerce.market.api.query.CalculateOrderAmountQuery;
 import moe.ahao.commerce.order.api.command.CreateOrderCommand;
 import moe.ahao.commerce.order.api.dto.CreateOrderDTO;
 import moe.ahao.commerce.order.infrastructure.enums.AccountTypeEnum;
-import moe.ahao.commerce.order.infrastructure.enums.BusinessIdentifierEnum;
 import moe.ahao.commerce.order.infrastructure.enums.DeliveryTypeEnum;
-import moe.ahao.commerce.order.infrastructure.enums.OrderTypeEnum;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
 import moe.ahao.commerce.order.infrastructure.gateway.MarketCalculateGateway;
 import moe.ahao.commerce.order.infrastructure.gateway.ProductGateway;
 import moe.ahao.commerce.order.infrastructure.gateway.RiskGateway;
-import moe.ahao.commerce.order.infrastructure.publisher.DefaultProducer;
+import moe.ahao.commerce.order.infrastructure.publisher.OrderEventPublisher;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderInfoDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderInfoMapper;
+import moe.ahao.commerce.order.infrastructure.component.statemachine.factory.OrderStateMachine;
+import moe.ahao.commerce.order.infrastructure.component.statemachine.factory.StateMachineFactory;
 import moe.ahao.commerce.product.api.dto.ProductSkuDTO;
 import moe.ahao.commerce.product.api.query.ListProductSkuQuery;
 import moe.ahao.commerce.risk.api.command.CheckOrderRiskCommand;
 import moe.ahao.exception.CommonBizExceptionEnum;
-import moe.ahao.util.commons.io.JSONHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +43,9 @@ public class CreateOrderAppService {
     private CreateOrderTxService createOrderTxService;
 
     @Autowired
+    private OrderInfoMapper orderInfoMapper;
+
+    @Autowired
     private ProductGateway productGateway;
     @Autowired
     private MarketCalculateGateway marketCalculateGateway;
@@ -56,12 +53,23 @@ public class CreateOrderAppService {
     private RiskGateway riskGateway;
 
     @Autowired
-    private OrderInfoMapper orderInfoMapper;
-
+    private OrderEventPublisher orderEventPublisher;
     @Autowired
-    private DefaultProducer defaultProducer;
+    private StateMachineFactory stateMachineFactory;
 
     public CreateOrderDTO createOrder(CreateOrderCommand command) {
+        // 1. 获取初始状态为NULL的订单状态机
+        OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(OrderStatusEnum.NULL);
+        // 2. 触发ORDER_CREATED事件, 将订单状态从null扭转为created, 并触发对应的业务逻辑操作
+        orderStateMachine.fire(OrderStatusChangeEnum.ORDER_CREATED, command);
+
+        // 返回订单信息
+        CreateOrderDTO createOrderDTO = new CreateOrderDTO();
+        createOrderDTO.setOrderId(command.getOrderId());
+        return createOrderDTO;
+    }
+
+    public CreateOrderDTO createOrderV1(CreateOrderCommand command) {
         log.info("创建订单command:{}", command);
 
         // 1. 入参检查
@@ -84,7 +92,7 @@ public class CreateOrderAppService {
         createOrderTxService.addNewOrder(command, productList, calculateOrderAmountDTO);
 
         // 7. 发送订单延迟消息用于支付超时自动关单
-        sendPayOrderTimeoutDelayMessage(command);
+        this.sendPayOrderTimeoutEvent(command);
 
         // 返回订单信息
         CreateOrderDTO dto = new CreateOrderDTO();
@@ -348,19 +356,9 @@ public class CreateOrderAppService {
     /**
      * 发送支付订单超时延迟消息，用于支付超时自动关单
      */
-    private void sendPayOrderTimeoutDelayMessage(CreateOrderCommand command) {
+    private void sendPayOrderTimeoutEvent(CreateOrderCommand command) {
         PayOrderTimeoutEvent event = new PayOrderTimeoutEvent();
-
-        String orderId = command.getOrderId();
-        event.setOrderId(orderId);
-        event.setBusinessIdentifier(command.getBusinessIdentifier());
-        event.setCancelType(OrderCancelTypeEnum.TIMEOUT_CANCELED.getCode());
-        event.setUserId(command.getUserId());
-        event.setOrderType(command.getOrderType());
-        event.setOrderStatus(OrderStatusEnum.CREATED.getCode());
-
-        String msgJson = JSONHelper.toString(event);
-        defaultProducer.sendMessage(RocketMqConstant.PAY_ORDER_TIMEOUT_DELAY_TOPIC, msgJson,
-            RocketDelayedLevel.DELAYED_30m, "支付订单超时延迟消息", null, orderId);
+        event.setOrderId(command.getOrderId());
+        orderEventPublisher.sendPayOrderTimeoutEvent(event);
     }
 }

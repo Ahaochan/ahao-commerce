@@ -1,6 +1,5 @@
 package moe.ahao.commerce.inventory;
 
-import io.seata.spring.boot.autoconfigure.SeataAutoConfiguration;
 import moe.ahao.commerce.inventory.api.InventoryFeignApi;
 import moe.ahao.commerce.inventory.api.command.AddProductStockCommand;
 import moe.ahao.commerce.inventory.api.command.ModifyProductStockCommand;
@@ -8,6 +7,7 @@ import moe.ahao.embedded.RedisExtension;
 import moe.ahao.util.commons.io.JSONHelper;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
 import org.hamcrest.core.IsEqual;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
 
+import static moe.ahao.commerce.inventory.infrastructure.cache.RedisCacheSupport.SALED_STOCK;
 import static moe.ahao.commerce.inventory.infrastructure.cache.RedisCacheSupport.SALE_STOCK;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,11 +34,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = InventoryApplication.class)
 @ActiveProfiles("test")
 
-@EnableAutoConfiguration(exclude = {SeataAutoConfiguration.class, RocketMQAutoConfiguration.class})
+// @EnableAutoConfiguration(exclude = {SeataAutoConfiguration.class, RocketMQAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {RocketMQAutoConfiguration.class})
 class InventoryModifyTest {
     public static final String skuCode = "ahao001";
     @RegisterExtension
@@ -84,12 +85,12 @@ class InventoryModifyTest {
 
         if (saleStockQuantity == null) {
             actions
-                .andExpect(jsonPath("$.obj.mysql", IsEqual.equalTo(Collections.emptyMap()), Map.class))
-                .andExpect(jsonPath("$.obj.redis", IsEqual.equalTo(Collections.emptyMap()), Map.class));
+                .andExpect(jsonPath("$.obj.saleStockQuantity", IsNull.nullValue()))
+                .andExpect(jsonPath("$.obj.saledStockQuantity", IsNull.nullValue()));
         } else {
             actions
-                .andExpect(jsonPath("$.obj.mysql." + SALE_STOCK).value(saleStockQuantity.intValue()))
-                .andExpect(jsonPath("$.obj.redis." + SALE_STOCK).value(saleStockQuantity.intValue()));
+                .andExpect(jsonPath("$.obj." + SALE_STOCK).value(saleStockQuantity.intValue()))
+                .andExpect(jsonPath("$.obj." + SALED_STOCK).value(0));
         }
     }
 }

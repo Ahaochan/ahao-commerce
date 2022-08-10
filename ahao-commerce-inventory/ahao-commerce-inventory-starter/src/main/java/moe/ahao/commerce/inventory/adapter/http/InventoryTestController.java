@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.inventory.api.InventoryFeignApi;
+import moe.ahao.commerce.inventory.api.dto.ProductStockDTO;
 import moe.ahao.commerce.inventory.application.InventoryQueryService;
 import moe.ahao.commerce.inventory.application.SyncStockToCacheProcessor;
 import moe.ahao.commerce.inventory.infrastructure.repository.impl.mybatis.data.ProductStockDO;
@@ -38,8 +39,8 @@ public class InventoryTestController {
      * 查询商品库存
      */
     @GetMapping("/getStockInfo")
-    public Result<Map<String, Map<String, BigDecimal>>> getStockInfo(@RequestParam String skuCode) {
-        Map<String, Map<String, BigDecimal>> result = inventoryQueryService.query(skuCode);
+    public Result<ProductStockDTO> getStockInfo(@RequestParam String skuCode) {
+        ProductStockDTO result = inventoryQueryService.queryV2(skuCode);
         return Result.success(result);
     }
 

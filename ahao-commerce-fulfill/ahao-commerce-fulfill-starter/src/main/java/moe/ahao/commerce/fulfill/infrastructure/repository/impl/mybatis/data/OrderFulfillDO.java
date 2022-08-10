@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import moe.ahao.domain.entity.BaseDO;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("order_fulfill")
+@NoArgsConstructor
 public class OrderFulfillDO extends BaseDO {
     /**
      * 主键id
@@ -41,6 +43,14 @@ public class OrderFulfillDO extends BaseDO {
      * 用户id
      */
     private String userId;
+    /**
+     * 履约单状态
+     */
+    private Integer status;
+    /**
+     * 履约单类型
+     */
+    private Integer orderFulfillType;
     /**
      * 配送类型，默认是自配送
      */
@@ -117,4 +127,43 @@ public class OrderFulfillDO extends BaseDO {
      * 运费
      */
     private BigDecimal deliveryAmount;
+    /**
+     * 扩展字段
+     */
+    private String extJson;
+
+    public OrderFulfillDO(OrderFulfillDO that) {
+        this.setId(that.id);
+        this.setBusinessIdentifier(that.businessIdentifier);
+        this.setFulfillId(that.fulfillId);
+        this.setOrderId(that.orderId);
+        this.setSellerId(that.sellerId);
+        this.setUserId(that.userId);
+        this.setStatus(that.status);
+        this.setOrderFulfillType(that.orderFulfillType);
+        this.setDeliveryType(that.deliveryType);
+        this.setReceiverName(that.receiverName);
+        this.setReceiverPhone(that.receiverPhone);
+        this.setReceiverProvince(that.receiverProvince);
+        this.setReceiverCity(that.receiverCity);
+        this.setReceiverArea(that.receiverArea);
+        this.setReceiverStreet(that.receiverStreet);
+        this.setReceiverDetailAddress(that.receiverDetailAddress);
+        this.setReceiverLon(that.receiverLon);
+        this.setReceiverLat(that.receiverLat);
+        this.setDelivererNo(that.delivererNo);
+        this.setDelivererName(that.delivererName);
+        this.setDelivererPhone(that.delivererPhone);
+        this.setLogisticsCode(that.logisticsCode);
+        this.setUserRemark(that.userRemark);
+        this.setPayType(that.payType);
+        this.setPayAmount(that.payAmount);
+        this.setTotalAmount(that.totalAmount);
+        this.setDeliveryAmount(that.deliveryAmount);
+        this.setExtJson(that.extJson);
+        this.setCreateBy(that.getCreateBy());
+        this.setUpdateBy(that.getUpdateBy());
+        this.setCreateTime(that.getCreateTime());
+        this.setUpdateTime(that.getUpdateTime());
+    }
 }

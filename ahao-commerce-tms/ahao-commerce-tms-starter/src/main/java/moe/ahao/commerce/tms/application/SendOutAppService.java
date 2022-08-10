@@ -39,7 +39,13 @@ public class SendOutAppService {
         logisticOrder.setContent(placeLogisticOrderDTO.getContent());
         logisticOrderMapper.insert(logisticOrder);
 
-        SendOutDTO sendOutDTO = new SendOutDTO(command.getOrderId(), placeLogisticOrderDTO.getLogisticCode());
+        // 3. 申请配送员
+        SendOutDTO sendOutDTO = new SendOutDTO();
+        sendOutDTO.setOrderId(command.getOrderId());
+        sendOutDTO.setLogisticsCode(logisticOrder.getLogisticCode());
+        sendOutDTO.setDelivererName("test-delivererName");
+        sendOutDTO.setDelivererNo("test-delivererNo");
+        sendOutDTO.setDelivererPhone("13711111111");
         return sendOutDTO;
     }
 

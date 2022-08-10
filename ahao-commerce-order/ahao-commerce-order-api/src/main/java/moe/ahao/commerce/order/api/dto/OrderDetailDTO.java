@@ -93,6 +93,10 @@ public class OrderDetailDTO {
      * 扩展信息
      */
     private String extJson;
+    /**
+     * 创建时间
+     */
+    private Date createTime;
 
     /**
      * 订单条目

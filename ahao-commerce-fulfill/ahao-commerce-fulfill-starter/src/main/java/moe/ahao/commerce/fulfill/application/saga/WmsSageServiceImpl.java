@@ -2,7 +2,6 @@ package moe.ahao.commerce.fulfill.application.saga;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.fulfill.api.command.ReceiveFulfillCommand;
-import moe.ahao.commerce.fulfill.api.command.ReceiveOrderItemCommand;
 import moe.ahao.commerce.fulfill.infrastructure.gateway.WmsGateway;
 import moe.ahao.commerce.wms.api.command.PickGoodsCommand;
 import moe.ahao.commerce.wms.api.dto.PickDTO;
@@ -67,7 +66,7 @@ public class WmsSageServiceImpl implements WmsSagaService {
         command.setOrderItems(orderItems);
         command.setWmsException(that.getWmsException());
 
-        for (ReceiveOrderItemCommand receiveOrderItem : that.getReceiveOrderItems()) {
+        for (ReceiveFulfillCommand.ReceiveOrderItem receiveOrderItem : that.getReceiveOrderItems()) {
             PickGoodsCommand.OrderItem pickOrderItem = new PickGoodsCommand.OrderItem();
             pickOrderItem.setSkuCode(receiveOrderItem.getSkuCode());
             pickOrderItem.setProductName(receiveOrderItem.getProductName());

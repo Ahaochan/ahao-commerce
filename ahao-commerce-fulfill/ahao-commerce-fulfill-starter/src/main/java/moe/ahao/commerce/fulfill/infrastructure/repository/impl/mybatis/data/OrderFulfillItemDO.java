@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import moe.ahao.domain.entity.BaseDO;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("order_fulfill_item")
+@NoArgsConstructor
 public class OrderFulfillItemDO extends BaseDO {
     /**
      * 主键ID
@@ -29,6 +31,10 @@ public class OrderFulfillItemDO extends BaseDO {
      * 商品skuCode
      */
     private String skuCode;
+    /**
+     * 商品类型
+     */
+    private Integer productType;
     /**
      * 商品名称
      */
@@ -53,4 +59,21 @@ public class OrderFulfillItemDO extends BaseDO {
      * 当前商品支付原总价
      */
     private BigDecimal originAmount;
+
+    public OrderFulfillItemDO(OrderFulfillItemDO that) {
+        this.setId(that.id);
+        this.setFulfillId(that.fulfillId);
+        this.setSkuCode(that.skuCode);
+        this.setProductType(that.productType);
+        this.setProductName(that.productName);
+        this.setSalePrice(that.salePrice);
+        this.setSaleQuantity(that.saleQuantity);
+        this.setProductUnit(that.productUnit);
+        this.setPayAmount(that.payAmount);
+        this.setOriginAmount(that.originAmount);
+        this.setCreateBy(that.getCreateBy());
+        this.setUpdateBy(that.getUpdateBy());
+        this.setCreateTime(that.getCreateTime());
+        this.setUpdateTime(that.getUpdateTime());
+    }
 }

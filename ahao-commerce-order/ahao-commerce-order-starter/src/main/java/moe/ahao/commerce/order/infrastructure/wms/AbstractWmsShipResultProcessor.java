@@ -2,12 +2,11 @@ package moe.ahao.commerce.order.infrastructure.wms;
 
 
 import moe.ahao.commerce.common.enums.OrderStatusChangeEnum;
-import moe.ahao.commerce.order.infrastructure.component.OrderOperateLogFactory;
-import moe.ahao.commerce.order.infrastructure.domain.dto.WmsShipDTO;
+import moe.ahao.commerce.order.infrastructure.domain.dto.AfterFulfillDTO;
 import moe.ahao.commerce.order.infrastructure.exception.OrderException;
+import moe.ahao.commerce.order.infrastructure.repository.impl.mongodb.OrderOperateLogRepository;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderInfoDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderInfoMapper;
-import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderOperateLogMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,14 +14,11 @@ public abstract class AbstractWmsShipResultProcessor implements OrderWmsShipResu
     @Autowired
     protected OrderInfoMapper orderInfoMapper;
     @Autowired
-    private OrderOperateLogMapper orderOperateLogMapper;
-
-    @Autowired
-    protected OrderOperateLogFactory orderOperateLogFactory;
+    protected OrderOperateLogRepository orderOperateLogRepository;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void execute(WmsShipDTO wmsShipDTO) throws OrderException {
+    public void execute(AfterFulfillDTO wmsShipDTO) throws OrderException {
         // 1. 查询订单
         OrderInfoDO order = orderInfoMapper.selectOneByOrderId(wmsShipDTO.getOrderId());
         if (order == null) {
@@ -39,12 +35,12 @@ public abstract class AbstractWmsShipResultProcessor implements OrderWmsShipResu
 
         // 4. 更新订单状态
         OrderStatusChangeEnum statusChange = wmsShipDTO.getStatusChange();
-        Integer formStatus = statusChange.getPreStatus().getCode();
-        Integer toStatus = statusChange.getCurrentStatus().getCode();
+        Integer formStatus = statusChange.getFromStatus().getCode();
+        Integer toStatus = statusChange.getToStatus().getCode();
         orderInfoMapper.updateOrderStatusByOrderId(order.getOrderId(), formStatus, toStatus);
 
         // 5. 增加操作日志
-        orderOperateLogMapper.insert(orderOperateLogFactory.get(order, wmsShipDTO.getStatusChange()));
+        orderOperateLogRepository.save(order, wmsShipDTO.getStatusChange());
     }
 
     /**
@@ -55,5 +51,5 @@ public abstract class AbstractWmsShipResultProcessor implements OrderWmsShipResu
     /**
      * 执行具体的业务逻辑
      */
-    protected abstract void doExecute(WmsShipDTO wmsShipDTO, OrderInfoDO order);
+    protected abstract void doExecute(AfterFulfillDTO wmsShipDTO, OrderInfoDO order);
 }

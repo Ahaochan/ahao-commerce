@@ -13,6 +13,7 @@ public enum MarketExceptionEnum implements BizExceptionEnum<MarketException> {
     SEND_MQ_FAILED(300004, "发送MQ消息失败"),
     CONSUME_MQ_FAILED(300005, "消费MQ消息失败"),
     RELEASE_COUPON_FAILED(300006, "释放优惠券失败"),
+    UPDATE_POINT_ERROR(300007, "更新会员积分异常"),
     ;
 
     private final int code;

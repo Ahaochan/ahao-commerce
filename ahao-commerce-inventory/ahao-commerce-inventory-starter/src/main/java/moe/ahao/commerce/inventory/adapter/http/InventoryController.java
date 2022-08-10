@@ -5,9 +5,11 @@ import moe.ahao.commerce.inventory.api.InventoryFeignApi;
 import moe.ahao.commerce.inventory.api.command.AddProductStockCommand;
 import moe.ahao.commerce.inventory.api.command.DeductProductStockCommand;
 import moe.ahao.commerce.inventory.api.command.ModifyProductStockCommand;
+import moe.ahao.commerce.inventory.api.command.ReleaseProductStockCommand;
 import moe.ahao.commerce.inventory.application.AddProductStockAppService;
 import moe.ahao.commerce.inventory.application.DeductProductStockAppService;
 import moe.ahao.commerce.inventory.application.ModifyProductStockAppService;
+import moe.ahao.commerce.inventory.application.ReleaseProductStockAppService;
 import moe.ahao.domain.entity.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,8 @@ public class InventoryController implements InventoryFeignApi {
     @Autowired
     private DeductProductStockAppService deductProductStockAppService;
     @Autowired
+    private ReleaseProductStockAppService releaseProductStockAppService;
+    @Autowired
     private ModifyProductStockAppService modifyProductStockAppService;
 
     /**
@@ -34,7 +38,16 @@ public class InventoryController implements InventoryFeignApi {
      */
     @Override
     public Result<Boolean> deductProductStock(@RequestBody DeductProductStockCommand command) {
-        Boolean result = deductProductStockAppService.deduct(command);
+        boolean result = deductProductStockAppService.deduct(command);
+        return Result.success(result);
+    }
+
+    /**
+     * 取消订单 释放商品库存
+     */
+    @Override
+    public Result<Boolean> releaseProductStock(ReleaseProductStockCommand command) {
+        boolean result = releaseProductStockAppService.releaseProductStock(command);
         return Result.success(result);
     }
 

@@ -2,7 +2,9 @@ package moe.ahao.commerce.product.api.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 
 /**
@@ -42,4 +44,16 @@ public class ProductSkuDTO {
      * 商品采购价格
      */
     private BigDecimal purchasePrice;
+    /**
+     * 预售商品信息
+     */
+    private PreSaleInfoDTO preSaleInfo;
+
+    @Data
+    public static class PreSaleInfoDTO {
+        /**
+         * 预售时间
+         */
+        private Date preSaleTime;
+    }
 }

@@ -1,10 +1,7 @@
 package moe.ahao.commerce.order.infrastructure.component;
 
 import lombok.Data;
-import moe.ahao.commerce.common.enums.AmountTypeEnum;
-import moe.ahao.commerce.common.enums.DeleteStatusEnum;
-import moe.ahao.commerce.common.enums.OrderOperateTypeEnum;
-import moe.ahao.commerce.common.enums.OrderStatusEnum;
+import moe.ahao.commerce.common.enums.*;
 import moe.ahao.commerce.market.api.dto.CalculateOrderAmountDTO;
 import moe.ahao.commerce.market.api.dto.UserCouponDTO;
 import moe.ahao.commerce.order.api.command.CreateOrderCommand;
@@ -12,9 +9,10 @@ import moe.ahao.commerce.order.api.command.GenOrderIdCommand;
 import moe.ahao.commerce.order.application.GenOrderIdAppService;
 import moe.ahao.commerce.order.infrastructure.config.OrderProperties;
 import moe.ahao.commerce.order.infrastructure.enums.CommentStatusEnum;
-import moe.ahao.commerce.common.enums.OrderTypeEnum;
 import moe.ahao.commerce.order.infrastructure.enums.PayStatusEnum;
 import moe.ahao.commerce.order.infrastructure.enums.SnapshotTypeEnum;
+import moe.ahao.commerce.order.infrastructure.repository.impl.hbase.data.OrderSnapshotDO;
+import moe.ahao.commerce.order.infrastructure.repository.impl.mongodb.data.OrderOperateLogDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.*;
 import moe.ahao.commerce.product.api.dto.ProductSkuDTO;
 import moe.ahao.util.commons.io.JSONHelper;
@@ -28,7 +26,7 @@ import java.util.stream.Stream;
 
 public class OrderDataBuilder {
     private final CreateOrderCommand createOrderCommand;
-    private final Map<String, ProductSkuDTO> productSkuMap;
+    private final List<ProductSkuDTO> productSkuList;
     private final CalculateOrderAmountDTO calculateOrderAmountDTO;
     private final OrderProperties orderProperties;
 
@@ -39,7 +37,7 @@ public class OrderDataBuilder {
                             CalculateOrderAmountDTO calculateOrderAmountDTO,
                             OrderProperties orderProperties) {
         this.createOrderCommand = createOrderCommand;
-        this.productSkuMap = productSkuList.stream().collect(Collectors.toMap(ProductSkuDTO::getSkuCode, Function.identity()));
+        this.productSkuList = productSkuList;
         this.calculateOrderAmountDTO = calculateOrderAmountDTO;
 
         this.orderProperties = orderProperties;
@@ -51,13 +49,19 @@ public class OrderDataBuilder {
      */
     private OrderInfoDO buildOrderInfo() {
         long currentTimeMillis = System.currentTimeMillis();
+        Map<Integer, List<ProductSkuDTO>> productTypeMap = productSkuList.stream()
+            .collect(Collectors.groupingBy(ProductSkuDTO::getProductType));
 
         OrderInfoDO data = new OrderInfoDO();
         // data.setId(0L);
         data.setOrderId(createOrderCommand.getOrderId());
         data.setParentOrderId(null);
         data.setBusinessIdentifier(createOrderCommand.getBusinessIdentifier());
-        data.setOrderType(OrderTypeEnum.NORMAL.getCode());
+        if(productTypeMap.keySet().size() <= 1) {
+            data.setOrderType(getOrderType(productSkuList.get(0).getProductType()));
+        } else {
+            data.setOrderType(getOrderType(OrderTypeEnum.NORMAL.getCode()));
+        }
         data.setUserRemark(createOrderCommand.getUserRemark());
         data.setOrderStatus(OrderStatusEnum.CREATED.getCode());
         data.setDeleteStatus(DeleteStatusEnum.NO.getCode());
@@ -95,6 +99,18 @@ public class OrderDataBuilder {
         return data;
     }
 
+    private static int getOrderType(Integer productType) {
+        ProductTypeEnum productTypeEnum = ProductTypeEnum.getByCode(productType);
+        if (ProductTypeEnum.NORMAL.equals(productTypeEnum)) {
+            return OrderTypeEnum.NORMAL.getCode();
+        } else if (ProductTypeEnum.VIRTUAL.equals(productTypeEnum)) {
+            return OrderTypeEnum.VIRTUAL.getCode();
+        } else if (ProductTypeEnum.PRE_SALE.equals(productTypeEnum)) {
+            return OrderTypeEnum.PRE_SALE.getCode();
+        }
+        return OrderTypeEnum.NORMAL.getCode();
+    }
+
     /**
      * 构建OrderItemDO对象
      */
@@ -105,7 +121,7 @@ public class OrderDataBuilder {
         Map<String, Map<Integer, CalculateOrderAmountDTO.OrderItemAmountDTO>> orderItemAmountMap = calculateOrderAmountDTO.getOrderItemAmountList().stream()
             .collect(Collectors.groupingBy(CalculateOrderAmountDTO.OrderItemAmountDTO::getSkuCode,
                 Collectors.toMap(CalculateOrderAmountDTO.OrderItemAmountDTO::getAmountType, Function.identity())));
-
+        Map<String, ProductSkuDTO> productSkuMap = productSkuList.stream().collect(Collectors.toMap(ProductSkuDTO::getSkuCode, Function.identity()));
 
         List<OrderItemDO> list = new ArrayList<>();
         for (int i = 0; i < orderItems.size(); i++) {
@@ -139,7 +155,12 @@ public class OrderDataBuilder {
                 .map(a -> data.getOriginAmount().subtract(a))   // 就用原始金额减去优惠抵扣金额, 等于实付金额
                 .orElse(data.getOriginAmount());                // 如果没有优惠抵扣金额, 就拿原始金额作为实付金额
             data.setPayAmount(payAmount);
-
+            if (ProductTypeEnum.PRE_SALE.getCode().equals(data.getProductType())) {
+                ProductSkuDTO productSku = productSkuMap.get(data.getSkuCode());
+                // 将预售商品信息放入orderItem的extJson里面
+                String mergeJSON = JSONHelper.mergeJSON(data.getExtJson(), JSONHelper.toString(productSku.getPreSaleInfo()));
+                data.setExtJson(mergeJSON);
+            }
             list.add(data);
 
         }
@@ -184,10 +205,6 @@ public class OrderDataBuilder {
      */
     private List<OrderPaymentDetailDO> buildOrderPaymentDetail() {
         List<CreateOrderCommand.OrderPayment> orderPayments = createOrderCommand.getOrderPayments();
-        Map<Integer, BigDecimal> orderAmountMap = createOrderCommand.getOrderAmounts().stream()
-            .collect(Collectors.toMap(CreateOrderCommand.OrderAmount::getAmountType,
-                CreateOrderCommand.OrderAmount::getAmount));
-
         List<OrderPaymentDetailDO> list = new ArrayList<>();
         for (CreateOrderCommand.OrderPayment orderPayment : orderPayments) {
             OrderPaymentDetailDO data = new OrderPaymentDetailDO();
@@ -195,7 +212,7 @@ public class OrderDataBuilder {
             data.setAccountType(orderPayment.getAccountType());
             data.setPayType(orderPayment.getPayType());
             data.setPayStatus(PayStatusEnum.UNPAID.getCode());
-            data.setPayAmount(orderAmountMap.get(AmountTypeEnum.REAL_PAY_AMOUNT.getCode()));
+            data.setPayAmount(orderPayment.getPayAmount());
             data.setPayTime(null);
             data.setOutTradeNo(null);
             data.setPayRemark(null);
@@ -353,6 +370,8 @@ public class OrderDataBuilder {
                 // 无需拆单
                 return Collections.emptyList();
             }
+            Map<Integer, List<OrderItemDO>> orderItemMap = orderItemList.stream()
+                .collect(Collectors.groupingBy(OrderItemDO::getProductType));
 
             // 对拆分后的子订单条目, 生成相关的子订单数据
             List<OrderData> subOrderDataList = new ArrayList<>();
@@ -390,6 +409,11 @@ public class OrderDataBuilder {
                 subOrderInfo.setId(null);
                 subOrderInfo.setOrderId(subOrderNo);
                 subOrderInfo.setParentOrderId(orderId);
+                if(orderItemMap.keySet().size() <= 1) {
+                    subOrderInfo.setOrderType(getOrderType(orderItemList.get(0).getProductType()));
+                } else {
+                    subOrderInfo.setOrderType(getOrderType(OrderTypeEnum.NORMAL.getCode()));
+                }
                 subOrderInfo.setOrderStatus(OrderStatusEnum.INVALID.getCode());
                 subOrderInfo.setTotalAmount(subTotalAmount);
                 subOrderInfo.setPayAmount(subRealPayAmount);
@@ -493,7 +517,6 @@ public class OrderDataBuilder {
 
         private String getSubOrderId(GenOrderIdAppService genOrderIdAppService) {
             GenOrderIdCommand command = new GenOrderIdCommand();
-            command.setBusinessIdentifier(orderInfo.getBusinessIdentifier());
             command.setUserId(orderInfo.getUserId());
             command.setOrderIdType(orderInfo.getOrderType());
             String orderId = genOrderIdAppService.generate(command);

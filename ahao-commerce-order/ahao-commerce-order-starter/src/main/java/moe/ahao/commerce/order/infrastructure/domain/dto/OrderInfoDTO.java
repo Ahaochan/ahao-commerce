@@ -3,6 +3,7 @@ package moe.ahao.commerce.order.infrastructure.domain.dto;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -67,12 +68,12 @@ public class OrderInfoDTO implements Serializable {
     /**
      * 交易总金额（以分为单位存储）
      */
-    private Integer totalAmount;
+    private BigDecimal totalAmount;
 
     /**
      * 交易支付金额
      */
-    private Integer payAmount;
+    private BigDecimal payAmount;
 
     /**
      * 交易支付方式

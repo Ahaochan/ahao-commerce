@@ -11,14 +11,18 @@ import moe.ahao.domain.entity.BaseDO;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import static moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderInfoDO.TABLE_NAME;
+
 /**
  * 订单表
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("order_info")
+@TableName(OrderInfoDO.TABLE_NAME)
 @NoArgsConstructor
 public class OrderInfoDO extends BaseDO {
+    public static final String TABLE_NAME = "order_info";
+
     /**
      * 主键id
      */

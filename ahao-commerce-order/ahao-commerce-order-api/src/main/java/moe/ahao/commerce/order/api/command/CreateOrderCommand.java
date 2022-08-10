@@ -176,5 +176,9 @@ public class CreateOrderCommand {
          * 账户类型
          */
         private Integer accountType;
+        /**
+         * 支付金额
+         */
+        private BigDecimal payAmount;
     }
 }

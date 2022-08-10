@@ -1,11 +1,12 @@
 package moe.ahao.commerce.order.application;
 
 import moe.ahao.commerce.common.constants.RedisLockKeyConstants;
+import moe.ahao.commerce.common.enums.OrderStatusChangeEnum;
 import moe.ahao.commerce.common.enums.OrderStatusEnum;
 import moe.ahao.commerce.common.enums.PayTypeEnum;
 import moe.ahao.commerce.order.api.command.PrePayOrderCommand;
 import moe.ahao.commerce.order.api.dto.PrePayOrderDTO;
-import moe.ahao.commerce.order.infrastructure.enums.BusinessIdentifierEnum;
+import moe.ahao.commerce.common.enums.BusinessIdentifierEnum;
 import moe.ahao.commerce.order.infrastructure.enums.PayStatusEnum;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
 import moe.ahao.commerce.order.infrastructure.gateway.PayGateway;
@@ -13,6 +14,8 @@ import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.Order
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderPaymentDetailDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderInfoMapper;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderPaymentDetailMapper;
+import moe.ahao.commerce.order.infrastructure.component.statemachine.factory.OrderStateMachine;
+import moe.ahao.commerce.order.infrastructure.component.statemachine.factory.StateMachineFactory;
 import moe.ahao.commerce.pay.api.command.PayOrderCommand;
 import moe.ahao.commerce.pay.api.dto.PayOrderDTO;
 import org.apache.commons.collections4.CollectionUtils;
@@ -42,6 +45,9 @@ public class PrePayOrderAppService {
     @Autowired
     private RedissonClient redissonClient;
 
+    @Autowired
+    private StateMachineFactory stateMachineFactory;
+
     /**
      * 预支付订单
      */
@@ -67,8 +73,10 @@ public class PrePayOrderAppService {
             // 4. 调用支付系统进行预支付
             PrePayOrderDTO payOrderDTO = this.doPrePay(command);
 
-            // 5. 更新订单表与支付信息表
-            this.updateOrderPaymentInfo(payOrderDTO);
+            // 5. 状态流转是created to created, 状态是不会变化, 拿到订单预支付的事件, 更新订单表与支付信息表
+            OrderStatusChangeEnum statusChangeEnum = OrderStatusChangeEnum.ORDER_PREPAY;
+            OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(statusChangeEnum.getFromStatus());
+            orderStateMachine.fire(statusChangeEnum, payOrderDTO);
 
             return payOrderDTO;
         } finally {
@@ -172,21 +180,7 @@ public class PrePayOrderAppService {
         return dto;
     }
 
-    /**
-     * 预支付更新订单支付信息
-     */
-    private void updateOrderPaymentInfo(PrePayOrderDTO prePayOrderDTO) {
-        String orderId = prePayOrderDTO.getOrderId();
-        Integer payType = prePayOrderDTO.getPayType();
-        String outTradeNo = prePayOrderDTO.getOutTradeNo();
-        Date payTime = new Date();
 
-        // 更新主订单支付信息
-        updateMasterOrderPaymentInfo(orderId, payType, payTime, outTradeNo);
-
-        // 更新子订单支付信息
-        updateSubOrderPaymentInfo(orderId, payType, payTime, outTradeNo);
-    }
 
     /**
      * 更新主订单支付信息

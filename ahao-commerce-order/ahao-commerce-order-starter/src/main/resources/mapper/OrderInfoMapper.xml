@@ -25,6 +25,19 @@
         <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
         and order_status = #{fromStatus}
     </update>
+    <update id="updateOrderStatusAndPayTimeByOrderId">
+        update order_info
+        set order_status = #{toStatus}, pay_time = #{payTime}
+        where order_id = #{orderId}
+          and order_status = #{fromStatus}
+    </update>
+    <update id="updateOrderStatusAndPayTimeByOrderIds">
+        update order_info
+        set order_status = #{toStatus}, pay_time = #{payTime}
+        where order_id in
+        <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+        and order_status = #{fromStatus}
+    </update>
     <update id="updatePrePayInfoByOrderId">
         update order_info
         set pay_type = #{payType},
@@ -34,13 +47,17 @@
     <update id="updatePrePayInfoByOrderIds">
         update order_info
         set pay_type = #{payType}, pay_time = #{payTime}
-        where order_id in
-        <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+        where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
     </update>
     <update id="updateCancelInfoByOrderId">
         update order_info
         set cancel_type = #{cancelType}, order_status = #{orderStatus}, cancel_time = #{cancelTime}
         where order_id = #{orderId}
+    </update>
+    <update id="updateCancelInfoByOrderIds">
+        update order_info
+        set cancel_type = #{cancelType}, order_status = #{orderStatus}, cancel_time = #{cancelTime}
+        where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
     </update>
 
     <select id="selectListByOrderIds"
@@ -69,7 +86,7 @@
         from order_info
         where order_id = #{orderId}
     </select>
-    <select id="selectPage" parameterType="moe.ahao.commerce.order.api.query.OrderQuery"
+    <select id="selectPage" parameterType="moe.ahao.commerce.order.api.query.OrderPageQuery"
             resultType="moe.ahao.commerce.order.api.dto.OrderListDTO">
         select o.business_identifier as businessIdentifier, o.order_id as orderId, o.business_order_id as
         businessOrderId,

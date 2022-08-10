@@ -1,0 +1,7 @@
+################################################## MongoDB 配置 ##################################################
+spring:
+  data:
+    mongodb:
+      database: order_operate_log
+      uri: mongodb://order:order@192.168.0.222:27017,192.168.0.222:27018,192.168.0.222:27019/order_operate_log?slaveOk=true&write=1&readPreference=secondaryPreferred&connectTimeoutMS=30000&replicaSet=ruyuan_rs
+################################################## MongoDB 配置 ##################################################

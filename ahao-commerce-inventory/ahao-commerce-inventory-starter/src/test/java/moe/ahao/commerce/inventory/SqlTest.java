@@ -10,7 +10,7 @@ class SqlTest {
         for (int i = 1; i <= 100; i++) {
             int id = i;
             String productId = "product" + i;
-            int productType = ProductTypeEnum.NORMAL_PRODUCT.getCode();
+            int productType = ProductTypeEnum.NORMAL.getCode();
             String skuCode = "skuCode" + i;
             String productName = "压测数据" + i;
             String productImg = "demo.img";

@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
 public class DeductStockDTO {
     /**
      * 订单id

@@ -1,6 +1,8 @@
 package moe.ahao.commerce.fulfill.api.command;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,6 +20,10 @@ public class ReceiveFulfillCommand {
      * 订单号
      */
     private String orderId;
+    /**
+     * 订单类型
+     */
+    private Integer orderType;
     /**
      * 商家id
      */
@@ -101,5 +107,50 @@ public class ReceiveFulfillCommand {
     /**
      * 订单商品明细
      */
-    private List<ReceiveOrderItemCommand> receiveOrderItems;
+    private List<ReceiveOrderItem> receiveOrderItems;
+
+    /**
+     * 履约订单商品明细请求
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReceiveOrderItem {
+        /**
+         * 商品sku
+         */
+        private String skuCode;
+        /**
+         * 商品类型
+         */
+        private Integer productType;
+        /**
+         * 商品名称
+         */
+        private String productName;
+        /**
+         * 销售单价
+         */
+        private BigDecimal salePrice;
+        /**
+         * 销售数量
+         */
+        private BigDecimal saleQuantity;
+        /**
+         * 商品单位
+         */
+        private String productUnit;
+        /**
+         * 付款金额
+         */
+        private BigDecimal payAmount;
+        /**
+         * 当前商品支付原总价
+         */
+        private BigDecimal originAmount;
+        /**
+         * 扩展信息
+         */
+        private String extJson;
+    }
 }

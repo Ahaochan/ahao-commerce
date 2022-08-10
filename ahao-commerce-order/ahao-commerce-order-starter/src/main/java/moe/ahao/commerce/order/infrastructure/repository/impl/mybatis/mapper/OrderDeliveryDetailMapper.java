@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 订单配送信息表 Mapper 接口
@@ -37,4 +38,5 @@ public interface OrderDeliveryDetailMapper extends BaseMapper<OrderDeliveryDetai
      * 根据订单号查询订单配送信息
      */
     OrderDeliveryDetailDO selectOneByOrderId(@Param("orderId") String orderId);
+    List<OrderDeliveryDetailDO> selectListByOrderIds(@Param("orderIds") List<String> orderIds);
 }

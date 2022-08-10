@@ -1,6 +1,5 @@
 package moe.ahao.commerce.inventory;
 
-import io.seata.spring.boot.autoconfigure.SeataAutoConfiguration;
 import moe.ahao.commerce.inventory.application.SyncStockToCacheProcessor;
 import moe.ahao.commerce.inventory.infrastructure.cache.RedisCacheSupport;
 import moe.ahao.embedded.RedisExtension;
@@ -16,11 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = InventoryApplication.class)
 @ActiveProfiles("test")
 
-@EnableAutoConfiguration(exclude = {SeataAutoConfiguration.class, RocketMQAutoConfiguration.class})
+// @EnableAutoConfiguration(exclude = {SeataAutoConfiguration.class, RocketMQAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {RocketMQAutoConfiguration.class})
 class InventorySyncCacheTest {
     @RegisterExtension
     static RedisExtension redisExtension = new RedisExtension();

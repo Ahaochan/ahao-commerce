@@ -34,8 +34,8 @@ public class PayGateway {
     /**
      * 调用支付系统执行退款
      */
-    public void executeRefund(RefundOrderCommand payRefundRequest) {
-        Result<Boolean> result = payFeignClient.refundOrder(payRefundRequest);
+    public void executeRefund(RefundOrderCommand command) {
+        Result<Boolean> result = payFeignClient.refundOrder(command);
         if (result.getCode() != Result.SUCCESS) {
             throw OrderExceptionEnum.ORDER_REFUND_AMOUNT_FAILED.msg();
         }

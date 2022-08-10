@@ -3,7 +3,7 @@ package moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import moe.ahao.commerce.order.api.dto.OrderListDTO;
-import moe.ahao.commerce.order.api.query.OrderQuery;
+import moe.ahao.commerce.order.api.query.OrderPageQuery;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderInfoDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -34,6 +34,12 @@ public interface OrderInfoMapper extends BaseMapper<OrderInfoDO> {
     int updateOrderStatusByOrderIds(@Param("orderIds") List<String> orderId, @Param("fromStatus") Integer fromStatus, @Param("toStatus") Integer toStatus);
 
     /**
+     * 更新订单状态和更新时间
+     */
+    int updateOrderStatusAndPayTimeByOrderId(@Param("orderId") String orderId, @Param("fromStatus") Integer fromStatus, @Param("toStatus") Integer toStatus, @Param("payTime") Date payTime);
+    int updateOrderStatusAndPayTimeByOrderIds(@Param("orderIds") List<String> orderId, @Param("fromStatus") Integer fromStatus, @Param("toStatus") Integer toStatus, @Param("payTime") Date payTime);
+
+    /**
      * 更新订单预支付信息
      */
     int updatePrePayInfoByOrderId(@Param("orderId") String orderId, @Param("payType") Integer payType, @Param("payTime") Date payTime);
@@ -43,6 +49,7 @@ public interface OrderInfoMapper extends BaseMapper<OrderInfoDO> {
      * 更新订单取消信息
      */
     int updateCancelInfoByOrderId(@Param("orderId") String orderId, @Param("cancelType") Integer cancelType, @Param("orderStatus") Integer orderStatus, @Param("cancelTime") Date cancelTime);
+    int updateCancelInfoByOrderIds(@Param("orderIds") List<String> orderIds, @Param("cancelType") Integer cancelType, @Param("orderStatus") Integer orderStatus, @Param("cancelTime") Date cancelTime);
 
     /**
      * 根据订单号查询订单
@@ -67,5 +74,5 @@ public interface OrderInfoMapper extends BaseMapper<OrderInfoDO> {
     /**
      * 订单分页查询
      */
-    Page<OrderListDTO> selectPage(Page<OrderListDTO> page, @Param("query") OrderQuery query);
+    Page<OrderListDTO> selectPage(Page<OrderListDTO> page, @Param("query") OrderPageQuery query);
 }

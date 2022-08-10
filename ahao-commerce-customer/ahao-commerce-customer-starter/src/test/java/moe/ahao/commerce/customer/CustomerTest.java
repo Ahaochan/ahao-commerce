@@ -28,7 +28,6 @@ import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = CustomerApplication.class)
 @ActiveProfiles("test")
 
@@ -72,8 +71,6 @@ public class CustomerTest {
         command.setAfterSaleId("售后单id");
         command.setCustomerId("客服id");
         command.setAuditResult(CustomerAuditResult.ACCEPT.getCode());
-        command.setAfterSaleRefundId("售后退款单id");
-        command.setOrderId("订单id");
         command.setAuditResultDesc("审核结果描述");
 
         Boolean success = customerAuditAppService.audit(command);

@@ -21,7 +21,10 @@ spring.cloud.nacos.config.shared-configs:
   - data-id: application-shared-rocketmq.yml
     group: DEFAULT_GROUP
     refresh: false
-  - data-id: application-shared-seata.yml
+#  - data-id: application-shared-seata.yml
+#    group: DEFAULT_GROUP
+#    refresh: false
+  - data-id: application-shared-xxljob.yml
     group: DEFAULT_GROUP
     refresh: false
 ################################################## Nacos 配置 ##################################################

@@ -2,7 +2,6 @@ package moe.ahao.commerce.fulfill.application.saga;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.fulfill.api.command.ReceiveFulfillCommand;
-import moe.ahao.commerce.fulfill.api.command.ReceiveOrderItemCommand;
 import moe.ahao.commerce.fulfill.infrastructure.gateway.TmsGateway;
 import moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.data.OrderFulfillDO;
 import moe.ahao.commerce.fulfill.infrastructure.repository.impl.mybatis.mapper.OrderFulfillMapper;
@@ -78,7 +77,7 @@ public class TmsSagaServiceImpl implements TmsSagaService {
         command.setOrderItems(orderItems);
         command.setTmsException(that.getTmsException());
 
-        for (ReceiveOrderItemCommand receiveOrderItem : that.getReceiveOrderItems()) {
+        for (ReceiveFulfillCommand.ReceiveOrderItem receiveOrderItem : that.getReceiveOrderItems()) {
             SendOutCommand.OrderItem sendOutOrderItem = new SendOutCommand.OrderItem();
             sendOutOrderItem.setSkuCode(receiveOrderItem.getSkuCode());
             sendOutOrderItem.setProductName(receiveOrderItem.getProductName());

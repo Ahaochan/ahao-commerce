@@ -11,14 +11,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 /**
  * 同步商品sku库存到缓存处理器
  */
 @Slf4j
 @Service
 public class SyncStockToCacheProcessor {
-    @Autowired
-    private AddProductStockProcessor addProductStockProcessor;
     @Autowired
     private ProductStockMapper productStockMapper;
 
@@ -39,7 +39,17 @@ public class SyncStockToCacheProcessor {
         RedisHelper.del(redisKey);
 
         // 4. 保存商品库存到redis
-        addProductStockProcessor.initRedis(productStock);
+        this.initRedis(productStock);
         return true;
+    }
+
+    /**
+     * 保存商品库存到redis
+     */
+    public void initRedis(ProductStockDO productStock) {
+        String productStockKey = RedisCacheSupport.buildProductStockKey(productStock.getSkuCode());
+        Map<String, String> productStockValue = RedisCacheSupport.buildProductStockValue(productStock.getSaleStockQuantity(), productStock.getSaledStockQuantity());
+
+        RedisHelper.hmset1(productStockKey, productStockValue);
     }
 }

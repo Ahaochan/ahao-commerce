@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 售后支付表 Mapper 接口
@@ -18,4 +19,5 @@ public interface AfterSaleRefundMapper extends BaseMapper<AfterSaleRefundDO> {
      * 根据售后单号查询售后单支付记录
      */
     AfterSaleRefundDO selectOneByAfterSaleId(@Param("afterSaleId") String afterSaleId);
+    List<AfterSaleRefundDO> selectListByAfterSaleIds(@Param("afterSaleIds") List<String> afterSaleIds);
 }

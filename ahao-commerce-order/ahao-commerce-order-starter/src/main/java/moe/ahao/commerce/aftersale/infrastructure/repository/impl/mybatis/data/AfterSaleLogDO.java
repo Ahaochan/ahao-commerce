@@ -24,6 +24,10 @@ public class AfterSaleLogDO extends BaseDO {
      */
     private String afterSaleId;
     /**
+     * 订单号
+     */
+    private String orderId;
+    /**
      * 前一个状态
      */
     private Integer preStatus;

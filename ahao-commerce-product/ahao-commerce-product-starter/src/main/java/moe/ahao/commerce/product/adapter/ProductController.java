@@ -5,8 +5,7 @@ import moe.ahao.commerce.product.api.ProductFeignApi;
 import moe.ahao.commerce.product.api.dto.ProductSkuDTO;
 import moe.ahao.commerce.product.api.query.GetProductSkuQuery;
 import moe.ahao.commerce.product.api.query.ListProductSkuQuery;
-import moe.ahao.commerce.product.application.GetProductSkuQueryService;
-import moe.ahao.commerce.product.application.ListProductSkuQueryService;
+import moe.ahao.commerce.product.application.ProductSkuQueryService;
 import moe.ahao.domain.entity.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,19 +19,17 @@ import java.util.List;
 @RequestMapping(ProductFeignApi.PATH)
 public class ProductController implements ProductFeignApi {
     @Autowired
-    private GetProductSkuQueryService getProductSkuQueryService;
-    @Autowired
-    private ListProductSkuQueryService listProductSkuQueryService;
+    private ProductSkuQueryService productSkuQueryService;
 
     @Override
     public Result<ProductSkuDTO> getBySkuCode(@RequestBody GetProductSkuQuery query) {
-        ProductSkuDTO dto = getProductSkuQueryService.query(query);
+        ProductSkuDTO dto = productSkuQueryService.query(query);
         return Result.success(dto);
     }
 
     @Override
     public Result<List<ProductSkuDTO>> listBySkuCodes(@RequestBody ListProductSkuQuery query) {
-        List<ProductSkuDTO> list = listProductSkuQueryService.query(query);
+        List<ProductSkuDTO> list = productSkuQueryService.query(query);
         return Result.success(list);
     }
 }

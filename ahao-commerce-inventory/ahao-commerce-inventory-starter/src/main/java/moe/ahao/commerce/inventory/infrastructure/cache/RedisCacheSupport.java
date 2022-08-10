@@ -6,9 +6,6 @@ import java.util.Map;
 
 /**
  * 库存缓存key-value support
- *
- * @author zhonghuashishan
- * @version 1.0
  */
 public interface RedisCacheSupport {
 

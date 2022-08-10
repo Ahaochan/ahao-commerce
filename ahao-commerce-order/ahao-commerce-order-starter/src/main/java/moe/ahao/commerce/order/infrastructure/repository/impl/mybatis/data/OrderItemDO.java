@@ -79,23 +79,28 @@ public class OrderItemDO extends BaseDO {
      * 卖家id
      */
     private String sellerId;
+    /**
+     * 扩展信息
+     */
+    private String extJson;
 
     public OrderItemDO(OrderItemDO that) {
         this.setId(that.id);
         this.setOrderId(that.orderId);
         this.setOrderItemId(that.orderItemId);
-        this.setSellerId(that.sellerId);
         this.setProductType(that.getProductType());
         this.setProductId(that.productId);
         this.setProductImg(that.productImg);
         this.setProductName(that.productName);
-        this.setProductUnit(that.productUnit);
         this.setSkuCode(that.skuCode);
         this.setSaleQuantity(that.saleQuantity);
         this.setSalePrice(that.salePrice);
-        this.setPurchasePrice(that.purchasePrice);
         this.setOriginAmount(that.originAmount);
         this.setPayAmount(that.payAmount);
+        this.setProductUnit(that.productUnit);
+        this.setPurchasePrice(that.purchasePrice);
+        this.setSellerId(that.sellerId);
+        this.setExtJson(that.extJson);
         this.setCreateBy(that.getCreateBy());
         this.setUpdateBy(that.getUpdateBy());
         this.setCreateTime(that.getCreateTime());

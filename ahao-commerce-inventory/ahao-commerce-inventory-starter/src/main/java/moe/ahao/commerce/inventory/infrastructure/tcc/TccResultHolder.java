@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 存储TCC第一阶段执行结果，用于解决TCC幂等，空回滚，悬挂问题
  */
+@Deprecated
 public class TccResultHolder {
 
     /**

@@ -2,11 +2,8 @@ package moe.ahao.commerce.inventory.infrastructure.cache;
 
 /**
  * lua脚本
- *
- *
- * @author zhonghuashishan
- * @version 1.0
  */
+@Deprecated
 public interface LuaScript {
 
     /**

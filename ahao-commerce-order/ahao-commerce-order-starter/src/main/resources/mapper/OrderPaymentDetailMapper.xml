@@ -21,6 +21,16 @@
         set pay_status = #{payStatus}
         where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
     </update>
+    <update id="updatePayStatusAndPayTimeByOrderId">
+        update order_payment_detail
+        set pay_status = #{payStatus}, pay_time = #{payTime}
+        where order_id = #{orderId}
+    </update>
+    <update id="updatePayStatusAndPayTimeByOrderIds">
+        update order_payment_detail
+        set pay_status = #{payStatus}, pay_time = #{payTime}
+        where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+    </update>
     <select id="selectListByOrderId" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderPaymentDetailDO">
         select * from order_payment_detail where order_id = #{orderId}
     </select>

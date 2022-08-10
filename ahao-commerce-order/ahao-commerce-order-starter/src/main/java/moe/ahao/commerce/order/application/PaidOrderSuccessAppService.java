@@ -1,29 +1,21 @@
 package moe.ahao.commerce.order.application;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.common.constants.RedisLockKeyConstants;
-import moe.ahao.commerce.common.enums.OrderStatusEnum;
+import moe.ahao.commerce.common.enums.OrderTypeEnum;
 import moe.ahao.commerce.common.infrastructure.event.PaidOrderSuccessEvent;
-import moe.ahao.commerce.common.infrastructure.rocketmq.MQMessage;
 import moe.ahao.commerce.fulfill.api.command.ReceiveFulfillCommand;
 import moe.ahao.commerce.order.infrastructure.exception.OrderExceptionEnum;
-import moe.ahao.commerce.order.infrastructure.publisher.TriggerOrderFulfillProducer;
+import moe.ahao.commerce.order.infrastructure.gateway.FulfillGateway;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderInfoDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.mapper.OrderInfoMapper;
-import moe.ahao.exception.BizException;
-import moe.ahao.util.commons.io.JSONHelper;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.client.producer.*;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageExt;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-
-import static moe.ahao.commerce.common.constants.RocketMqConstant.TRIGGER_ORDER_FULFILL_TOPIC;
+import java.util.List;
 
 
 @Slf4j
@@ -36,7 +28,7 @@ public class PaidOrderSuccessAppService {
     private OrderFulFillService orderFulFillService;
 
     @Autowired
-    private TriggerOrderFulfillProducer triggerOrderFulfillProducer;
+    private FulfillGateway fulfillGateway;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -50,7 +42,14 @@ public class PaidOrderSuccessAppService {
             throw OrderExceptionEnum.ORDER_INFO_IS_NULL.msg();
         }
 
-        // 2. 加分布式锁, 结合履约前置状态校验, 防止消息重复消费
+        // 2. 判断是否可以触发履约, 没有子订单并且不是虚拟订单可以履约
+        //    无效主单过来是不能触发履约, 但是你的子单支付事件也会过来, 触发子单履约
+        List<OrderInfoDO> subOrders = orderInfoMapper.selectListByParentOrderId(orderId);
+        if (!canTriggerFulfill(orderInfoDO, subOrders)) {
+            return;
+        }
+
+        // 3. 加分布式锁, 结合履约前置状态校验, 防止消息重复消费
         String lockKey = RedisLockKeyConstants.ORDER_FULFILL_KEY + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         boolean locked = lock.tryLock();
@@ -60,59 +59,21 @@ public class PaidOrderSuccessAppService {
         }
 
         try {
-            // 3. 进行订单履约逻辑
-            TransactionMQProducer producer = triggerOrderFulfillProducer.getProducer();
-            producer.setTransactionListener(this.getTransactionListener());
+            // 4. 进行订单履约逻辑
+            orderFulFillService.triggerOrderFulFill(orderId);
 
-            // 发送触发履约的消息通知履约系统触发订单进行履约
-            ReceiveFulfillCommand receiveFulfillRequest = orderFulFillService.buildReceiveFulFillRequest(orderInfoDO);
-            String topic = TRIGGER_ORDER_FULFILL_TOPIC;
-            byte[] body = JSONHelper.toString(receiveFulfillRequest).getBytes(StandardCharsets.UTF_8);
-            Message mq = new MQMessage(topic, null, orderId, body);
-            TransactionSendResult transactionSendResult = producer.sendMessageInTransaction(mq, orderInfoDO);
-            boolean sendOK = transactionSendResult.getSendStatus().equals(SendStatus.SEND_OK);
-            if (!sendOK) {
-                throw OrderExceptionEnum.ORDER_FULFILL_ERROR.msg();
-            }
-        } catch (MQClientException e) {
-            log.error("发送触发履约的消息失败", e);
-            throw OrderExceptionEnum.ORDER_FULFILL_ERROR.msg();
+            // 5. 将订单推送至履约
+            ReceiveFulfillCommand receiveFulfillCommand = orderFulFillService.buildReceiveFulFillRequest(orderInfoDO);
+            fulfillGateway.receiveOrderFulFill(receiveFulfillCommand);
         } finally {
             lock.unlock();
         }
     }
 
     /**
-     * 设置事务消息回调监听器
+     * 判断是否可以触发履约
      */
-    private TransactionListener getTransactionListener() {
-        return new TransactionListener() {
-            @Override
-            public LocalTransactionState executeLocalTransaction(Message message, Object o) {
-                try {
-                    OrderInfoDO orderInfo = (OrderInfoDO) o;
-                    orderFulFillService.triggerOrderFulFill(orderInfo.getOrderId());
-                    return LocalTransactionState.COMMIT_MESSAGE;
-                } catch (BizException e) {
-                    log.error("biz error", e);
-                    return LocalTransactionState.ROLLBACK_MESSAGE;
-                } catch (Exception e) {
-                    log.error("system error", e);
-                    return LocalTransactionState.ROLLBACK_MESSAGE;
-                }
-            }
-
-            @Override
-            public LocalTransactionState checkLocalTransaction(MessageExt messageExt) {
-                ReceiveFulfillCommand receiveFulfillRequest = JSONHelper.parse(new String(messageExt.getBody(), StandardCharsets.UTF_8), ReceiveFulfillCommand.class);
-                // 检查订单是否"已履约"状态
-                OrderInfoDO orderInfoDO = orderInfoMapper.selectOneByOrderId(receiveFulfillRequest.getOrderId());
-                if (orderInfoDO != null
-                    && OrderStatusEnum.FULFILL.getCode().equals(orderInfoDO.getOrderStatus())) {
-                    return LocalTransactionState.COMMIT_MESSAGE;
-                }
-                return LocalTransactionState.ROLLBACK_MESSAGE;
-            }
-        };
+    private boolean canTriggerFulfill(OrderInfoDO order, List<OrderInfoDO> subOrders) {
+        return CollectionUtils.isEmpty(subOrders) && OrderTypeEnum.canFulfillTypes().contains(order.getOrderType());
     }
 }

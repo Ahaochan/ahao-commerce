@@ -1,7 +1,7 @@
 package moe.ahao.commerce.order.infrastructure.wms;
 
 
-import moe.ahao.commerce.order.infrastructure.domain.dto.WmsShipDTO;
+import moe.ahao.commerce.order.infrastructure.domain.dto.AfterFulfillDTO;
 import moe.ahao.commerce.order.infrastructure.exception.OrderException;
 
 /**
@@ -14,5 +14,5 @@ public interface OrderWmsShipResultProcessor {
      *
      * @throws OrderException
      */
-    void execute(WmsShipDTO wmsShipDTO) throws OrderException;
+    void execute(AfterFulfillDTO wmsShipDTO) throws OrderException;
 }

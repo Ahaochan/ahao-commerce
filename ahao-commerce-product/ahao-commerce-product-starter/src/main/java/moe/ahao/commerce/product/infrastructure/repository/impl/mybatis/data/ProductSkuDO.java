@@ -51,4 +51,8 @@ public class ProductSkuDO extends BaseDO {
      * 商品采购价格
      */
     private BigDecimal purchasePrice;
+    /**
+     * 扩展信息
+     */
+    private String extJson;
 }

@@ -4,7 +4,11 @@
     <select id="selectListByOrderId" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderAmountDetailDO">
         select * from order_amount_detail where order_id = #{orderId}
     </select>
+    <select id="selectListByOrderIds" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderAmountDetailDO">
+        select * from order_amount_detail where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
+    </select>
     <select id="selectListByOrderIdAndOrderItemId" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderAmountDetailDO">
         select * from order_amount_detail where order_id = #{orderId} and order_item_id = #{orderItemId}
     </select>
+
 </mapper>

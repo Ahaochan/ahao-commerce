@@ -7,9 +7,9 @@ import moe.ahao.commerce.order.api.command.CreateOrderCommand;
 import moe.ahao.commerce.order.api.dto.CreateOrderDTO;
 import moe.ahao.commerce.order.application.CreateOrderAppService;
 import moe.ahao.commerce.order.infrastructure.enums.AccountTypeEnum;
-import moe.ahao.commerce.order.infrastructure.enums.BusinessIdentifierEnum;
+import moe.ahao.commerce.common.enums.BusinessIdentifierEnum;
 import moe.ahao.commerce.order.infrastructure.enums.DeliveryTypeEnum;
-import moe.ahao.commerce.order.infrastructure.enums.OrderTypeEnum;
+import moe.ahao.commerce.common.enums.OrderTypeEnum;
 import moe.ahao.commerce.order.infrastructure.gateway.feign.ProductFeignClient;
 import moe.ahao.commerce.order.infrastructure.gateway.feign.RiskFeignClient;
 import moe.ahao.commerce.order.infrastructure.publisher.DefaultProducer;
@@ -35,7 +35,6 @@ import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = OrderApplication.class)
 @ActiveProfiles("test")
 public class CreateOrderTest {
@@ -53,8 +52,9 @@ public class CreateOrderTest {
 
     @BeforeEach
     public void beforeEach() {
+        Mockito.doNothing().when(defaultProducer).sendMessage(any(), any(), any(), any());
         Mockito.doNothing().when(defaultProducer).sendMessage(any(), any(), any(), any(), any());
-        Mockito.doNothing().when(defaultProducer).sendMessage(any(), any(), any(), any(), any(), any());
+        Mockito.doNothing().when(defaultProducer).sendMessage(any(), any(), any(), any(), any(), any(), any());
 
         CheckOrderRiskDTO checkOrderRiskDTO = new CheckOrderRiskDTO();
         checkOrderRiskDTO.setResult(true);
@@ -96,7 +96,7 @@ public class CreateOrderTest {
         command.setDeviceId("45sf2354adfw245");
 
         CreateOrderCommand.OrderItem orderItem = new CreateOrderCommand.OrderItem();
-        orderItem.setProductType(ProductTypeEnum.NORMAL_PRODUCT.getCode());
+        orderItem.setProductType(ProductTypeEnum.NORMAL.getCode());
         orderItem.setSaleQuantity(new BigDecimal("10"));
         orderItem.setSkuCode("skuCode001");
         command.setOrderItems(Arrays.asList(orderItem));

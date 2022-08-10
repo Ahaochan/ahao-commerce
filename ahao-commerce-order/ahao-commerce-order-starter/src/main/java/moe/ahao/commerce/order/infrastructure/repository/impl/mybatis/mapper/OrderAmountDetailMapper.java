@@ -16,6 +16,7 @@ public interface OrderAmountDetailMapper extends BaseMapper<OrderAmountDetailDO>
      * 根据订单号查询订单费用明细
      */
     List<OrderAmountDetailDO> selectListByOrderId(@Param("orderId") String orderId);
+    List<OrderAmountDetailDO> selectListByOrderIds(@Param("orderIds") List<String> orderIds);
 
     /**
      * 根据订单号查询订单费用明细

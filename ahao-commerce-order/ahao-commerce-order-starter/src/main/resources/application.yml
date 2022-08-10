@@ -3,3 +3,164 @@ server.port: 8005
 spring.datasource.url: jdbc:mysql://192.168.19.128:3306/ahao_order?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
 spring.datasource.username: root
 spring.datasource.password: root
+
+spring.shardingsphere.props.sql.show: true
+# 数据源配置
+spring.shardingsphere.datasource.names: ds0,ds1,ds2,ds3,ds4,ds5,ds6,ds7
+spring.shardingsphere.datasource.ds0.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds0.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds0.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds0.username: root
+spring.shardingsphere.datasource.ds0.password: root
+spring.shardingsphere.datasource.ds1.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds1.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds1.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds1.username: root
+spring.shardingsphere.datasource.ds1.password: root
+spring.shardingsphere.datasource.ds2.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds2.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds2.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds2.username: root
+spring.shardingsphere.datasource.ds2.password: root
+spring.shardingsphere.datasource.ds3.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds3.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds3.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds3.username: root
+spring.shardingsphere.datasource.ds3.password: root
+spring.shardingsphere.datasource.ds4.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds4.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds4.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds4.username: root
+spring.shardingsphere.datasource.ds4.password: root
+spring.shardingsphere.datasource.ds5.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds5.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds5.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds5.username: root
+spring.shardingsphere.datasource.ds5.password: root
+spring.shardingsphere.datasource.ds6.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds6.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds6.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds6.username: root
+spring.shardingsphere.datasource.ds6.password: root
+spring.shardingsphere.datasource.ds7.type: com.zaxxer.hikari.HikariDataSource
+spring.shardingsphere.datasource.ds7.driver-class-name: com.mysql.cj.jdbc.Driver
+spring.shardingsphere.datasource.ds7.url: jdbc:mysql://${MYSQL_URL}/ahaodb_0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&tinyInt1isBit=false&rewriteBatchedStatements=true&useAffectedRows=true
+spring.shardingsphere.datasource.ds7.username: root
+spring.shardingsphere.datasource.ds7.password: root
+
+
+# 默认的数据源  order_auto_no、order_cancel_scheduled_task、undo_log等三个表不做分库分库，都会走默认的数据源
+spring.shardingsphere.sharding.default-data-source-name: ds0
+# 默认的分库策略
+spring.shardingsphere.sharding.default-database-strategy.standard.sharding-column: order_id
+spring.shardingsphere.sharding.default-database-strategy.standard.precise-algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+
+# 只需要分库的表配置
+spring.shardingsphere.sharding.tables.ruyuan_tend_consistency_task.actual-data-nodes: ds$->{0..7}.ruyuan_tend_consistency_task
+spring.shardingsphere.sharding.tables.ruyuan_tend_consistency_task.database-strategy.inline.sharding-column: shard_key
+spring.shardingsphere.sharding.tables.ruyuan_tend_consistency_task.database-strategy.inline.algorithm-expression: ds$->{shard_key % 8}
+# 正向订单业务表
+spring.shardingsphere.sharding.tables.order_info.actual-data-nodes: ds$->{0..7}.order_info_$->{0..63}
+spring.shardingsphere.sharding.tables.order_info.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_info.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.order_info.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_info.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.order_item.actual-data-nodes: ds$->{0..7}.order_item_$->{0..63}
+spring.shardingsphere.sharding.tables.order_item.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_item.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.order_item.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_item.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.order_payment_detail.actual-data-nodes: ds$->{0..7}.order_payment_detail_$->{0..63}
+spring.shardingsphere.sharding.tables.order_payment_detail.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_payment_detail.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.order_payment_detail.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_payment_detail.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.order_amount.actual-data-nodes: ds$->{0..7}.order_amount_$->{0..63}
+spring.shardingsphere.sharding.tables.order_amount.table-strategy.complex.sharding-columns: order_id
+spring.shardingsphere.sharding.tables.order_amount.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.order_amount_detail.actual-data-nodes: ds$->{0..7}.order_amount_$->{0..63}
+spring.shardingsphere.sharding.tables.order_amount_detail.table-strategy.complex.sharding-columns: order_id
+spring.shardingsphere.sharding.tables.order_amount_detail.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.order_delivery_detail.actual-data-nodes: ds$->{0..7}.order_payment_detail_$->{0..63}
+spring.shardingsphere.sharding.tables.order_delivery_detail.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_delivery_detail.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.order_delivery_detail.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.order_delivery_detail.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+# 逆向售后业务表
+spring.shardingsphere.sharding.tables.after_sale_info.actual-data-nodes: ds$->{0..7}.order_payment_detail_$->{0..63}
+spring.shardingsphere.sharding.tables.after_sale_info.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.after_sale_info.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.after_sale_info.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.after_sale_info.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.after_sale_item.actual-data-nodes: ds$->{0..7}.order_payment_detail_$->{0..63}
+spring.shardingsphere.sharding.tables.after_sale_item.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.after_sale_item.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.after_sale_item.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.after_sale_item.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.after_sale_log.actual-data-nodes: ds$->{0..7}.order_amount_$->{0..63}
+spring.shardingsphere.sharding.tables.after_sale_log.table-strategy.complex.sharding-columns: after_sale_id
+spring.shardingsphere.sharding.tables.after_sale_log.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+spring.shardingsphere.sharding.tables.after_sale_refund.actual-data-nodes: ds$->{0..7}.order_payment_detail_$->{0..63}
+spring.shardingsphere.sharding.tables.after_sale_refund.database-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.after_sale_refund.database-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.DatabaseComplexKeysShardingAlgorithm
+spring.shardingsphere.sharding.tables.after_sale_refund.table-strategy.complex.sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+spring.shardingsphere.sharding.tables.after_sale_refund.table-strategy.complex.algorithm-class-name: moe.ahao.commerce.order.infrastructure.component.sharding.TableComplexKeysShardingAlgorithm
+
+# 绑定表配置
+spring.shardingsphere.sharding.binding-tables:
+  - order_info,order_item,order_payment_detail,order_delivery_detail
+  - after_sale_info,after_sale_item,after_sale_refund
+
+
+ruyuan.tend.consistency:
+  parallel:
+    pool:
+      # 不配置默认值就是5
+      thread-max-pool-size: 5
+      # 不配置默认值就是5
+      thread-core-pool-size: 5
+      # 不配置默认值就是60
+      thread-pool-keep-alive-time: 60
+      # 不配置默认值就是SECONDS
+      thread-pool-keep-alive-time-unit: SECONDS
+      # 不配置默认值就是100
+      thread-pool-queue-size: 100
+  action:
+    # 默认值是0 也就是 只要出现失败的情况，就会走降级逻辑，这里记的配置降级类。如果没有配置降级类，则不会走降级逻辑
+    fail-count-threshold: 0
+  shard:
+    # 表示任务表一个库中，如果确认使用单库模式，可以不配置 默认就是false  这里只是为了说明，就写了出来
+    task-sharded: false
+
+# elasticsearch相关配置信息
+elasticsearch:
+  # 集群节点，多个节点采用逗号分隔，需要替换为ecs的ip
+  clusterNodes: localhost:9200
+  shards-number: 3
+  replicas-number: 2
+  return-size: 10000
+hbase:
+  config:
+    hbase:
+      zookeeper:
+        quorum: 192.168.0.222:2181
+
+management:
+  health:
+    db:
+      enabled: false
+spring:
+  elasticsearch:
+    rest:
+      uris: localhost:9200 # 集群节点，多个节点采用逗号分隔，需要替换为ecs的ip
+      connection-timeout: 1s # 建立连接超时时间
+  data.

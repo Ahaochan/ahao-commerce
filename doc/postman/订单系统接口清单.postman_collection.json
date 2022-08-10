@@ -73,7 +73,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"orderId\":1021121732891264100,\n    \"businessIdentifier\":1,\n    \"openid\":null,\n    \"userId\":100,\n    \"orderType\":1,\n    \"sellerId\":101,\n    \"userRemark\":\"test reamark\",\n    \"deliveryType\":1,\n    \"province\":\"110000\",\n    \"city\":\"110100\",\n    \"area\":\"110105\",\n    \"street\":\"110101007\",\n    \"detailAddress\":\"北京路10号\",\n    \"lon\":100.10000,\n    \"lat\":1010.201010,\n    \"receiverName\":\"张三\",\n    \"receiverPhone\":\"13434545545\",\n    \"userAddressId\":\"1010\",\n    \"addressCode\":\"1010100\",\n    \"regionId\":\"10002020\",\n    \"shippingAreaId\":\"101010212\",\n    \"clientIp\":\"34.53.12.34\",\n    \"deviceId\":\"45sf2354adfw245\",\n    \"orderItemRequestList\":[\n        {\n            \"productType\":1,\n            \"saleQuantity\":10,\n            \"skuCode\":\"skuCode001\"\n        }\n    ],\n    \"orderAmountRequestList\":[\n        {\n            \"amountType\":10,\n            \"amount\":10000\n        },\n        {\n            \"amountType\":30,\n            \"amount\":0\n        },\n        {\n            \"amountType\":50,\n            \"amount\":10000\n        }\n    ],\n    \"paymentRequestList\":[\n        {\n            \"payType\":10,\n            \"accountType\":1\n        }\n    ]\n}",
+							"raw": "{\n    \"orderId\":1021121732891264100,\n    \"businessIdentifier\":1,\n    \"openid\":null,\n    \"userId\":100,\n    \"orderType\":1,\n    \"sellerId\":101,\n    \"userRemark\":\"test reamark\",\n    \"deliveryType\":1,\n    \"province\":\"110000\",\n    \"city\":\"110100\",\n    \"area\":\"110105\",\n    \"street\":\"110101007\",\n    \"detailAddress\":\"北京路10号\",\n    \"lon\":100.10000,\n    \"lat\":1010.201010,\n    \"receiverName\":\"张三\",\n    \"receiverPhone\":\"13434545545\",\n    \"userAddressId\":\"1010\",\n    \"addressCode\":\"1010100\",\n    \"regionId\":\"10002020\",\n    \"shippingAreaId\":\"101010212\",\n    \"clientIp\":\"34.53.12.34\",\n    \"deviceId\":\"45sf2354adfw245\",\n    \"orderItemRequestList\":[\n        {\n            \"productType\":1,\n            \"saleQuantity\":10,\n            \"skuCode\":\"skuCode001\"\n        }\n    ],\n    \"orderAmountRequestList\":[\n        {\n            \"amountType\":10,\n            \"amount\":10000\n        },\n        {\n            \"amountType\":30,\n            \"amount\":0\n        },\n        {\n            \"amountType\":50,\n            \"amount\":10000\n        }\n    ],\n    \"paymentRequestList\":[\n        {\n            \"payType\":10,\n            \"accountType\":1\n    \"payAmount\":10000\n    }\n    ]\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -273,7 +273,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"orderId\":\"1021120632907792100\",\n    \"signedTime\":\"2021-12-06 10:00:00\"\n}",
+							"raw": "{\n    \"orderId\":\"1021120632907792100\",\n    \"signedTime\":\"2021-12-06 10:00:00\",\n  \"fulfillId\":\"4011466443\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -544,7 +544,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\r\n  \"orderId\": \"1021120232958721100\",\r\n  \"businessIdentifier\": 1,\r\n  \"userId\": \"100\",\r\n  \"returnGoodsCode\": 0,\r\n  \"returnGoodsDesc\": \"要退货\",\r\n  \"skuCode\": \"10101010\"\r\n}"
+							"raw": "{\r\n  \"orderId\": \"1021120232958721100\",\r\n  \"businessIdentifier\": 1,\r\n  \"userId\": \"100\",\r\n  \"returnGoodsCode\": 0,\r\n  \"returnGoodsDesc\": \"要退货\",\r\n  \"skuCode\": \"10101010\",\r\n  \"returnQuantity\":1\r\n}"
                         },
                         "url": {
                             "raw": "http://localhost:8005/afterSale/applyAfterSale",
@@ -579,7 +579,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\r\n  \"afterSaleId\": 2021120232891521100,\r\n  \"customerId\": \"123456\",\r\n  \"auditResult\": 1,\r\n  \"afterSaleRefundId\": 7,\r\n  \"orderId\": \"1021120232958721100\",\r\n  \"auditResultDesc\":\"测试前台发来的客服审核通过\"\r\n}"
+							"raw": "{\r\n  \"afterSaleId\": 2021120232891521100,\r\n  \"customerId\": \"123456\",\r\n  \"auditResult\": 1,\r\n  \"afterSaleRefundId\": 7,\r\n  \"orderId\": \"1021120232958721100\",\r\n  \"skuCode\":\"10101011\",\r\n  \"auditResultDesc\":\"测试前台发来的客服审核通过\",\r\n  \"afterSaleItemType\":10\r\n}"
                         },
                         "url": {
                             "raw": "http://localhost:8011/customer/audit",

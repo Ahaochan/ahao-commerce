@@ -3,7 +3,7 @@ package moe.ahao.commerce.order;
 
 import moe.ahao.commerce.order.api.command.GenOrderIdCommand;
 import moe.ahao.commerce.order.application.GenOrderIdAppService;
-import moe.ahao.commerce.order.infrastructure.enums.BusinessIdentifierEnum;
+import moe.ahao.commerce.common.enums.BusinessIdentifierEnum;
 import moe.ahao.commerce.order.infrastructure.enums.OrderIdTypeEnum;
 import moe.ahao.commerce.order.infrastructure.publisher.DefaultProducer;
 import moe.ahao.embedded.RedisExtension;
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = OrderApplication.class)
 @ActiveProfiles("test")
 public class GenOrderIdTest {
@@ -41,7 +40,7 @@ public class GenOrderIdTest {
         int threadCount = 100;
         List<Callable<String>> taskList = new ArrayList<>();
         for (int i = 0; i < threadCount; i++) {
-            taskList.add(() -> genOrderIdAppService.generate(new GenOrderIdCommand(BusinessIdentifierEnum.SELF_MALL.getCode(), OrderIdTypeEnum.SALE_ORDER.getCode(), "001")));
+            taskList.add(() -> genOrderIdAppService.generate(OrderIdTypeEnum.SALE_ORDER, "001"));
         }
         List<String> list = ConcurrentTestUtils.concurrentCallable(threadCount, taskList);
         list.forEach(System.out::println);

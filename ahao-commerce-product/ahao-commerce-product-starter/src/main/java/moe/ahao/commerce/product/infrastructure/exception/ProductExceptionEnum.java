@@ -8,6 +8,7 @@ import moe.ahao.exception.BizExceptionEnum;
 @AllArgsConstructor
 public enum ProductExceptionEnum implements BizExceptionEnum<ProductException> {
     SKU_CODE_IS_NULL(200001, "sku编号不能为空"),
+    PRE_SALE_INFO_IS_NULL(200002, "预售商品信息不能为空"),
     ;
     private final int code;
     private final String message;

@@ -1,7 +1,7 @@
 package moe.ahao.commerce.market.application;
 
 import moe.ahao.commerce.market.api.command.LockUserCouponCommand;
-import moe.ahao.commerce.market.infrastructure.enums.CouponUsedStatusEnum;
+import moe.ahao.commerce.common.enums.CouponUsedStatusEnum;
 import moe.ahao.commerce.market.infrastructure.exception.MarketExceptionEnum;
 import moe.ahao.commerce.market.infrastructure.repository.impl.mybatis.data.CouponDO;
 import moe.ahao.commerce.market.infrastructure.repository.impl.mybatis.mapper.CouponMapper;

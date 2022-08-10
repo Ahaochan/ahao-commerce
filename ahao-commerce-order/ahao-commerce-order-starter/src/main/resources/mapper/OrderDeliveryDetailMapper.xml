@@ -31,10 +31,12 @@
         modify_address_count = modify_address_count + 1
         where order_id = #{orderId}
     </update>
-    <select id="selectOneByOrderId"
-            resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderDeliveryDetailDO">
-        select *
-        from order_delivery_detail
+    <select id="selectOneByOrderId" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderDeliveryDetailDO">
+        select * from order_delivery_detail
         where order_id = #{orderId}
+    </select>
+    <select id="selectListByOrderIds" resultType="moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.OrderDeliveryDetailDO">
+        select * from order_delivery_detail
+        where order_id in <foreach collection="orderIds" item="item" open="(" close=")" separator=",">#{item}</foreach>
     </select>
 </mapper>

@@ -1,7 +1,6 @@
 package moe.ahao.commerce.order.application;
 
 
-import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import moe.ahao.commerce.inventory.api.command.DeductProductStockCommand;
 import moe.ahao.commerce.market.api.command.LockUserCouponCommand;
@@ -11,6 +10,10 @@ import moe.ahao.commerce.order.infrastructure.component.OrderDataBuilder;
 import moe.ahao.commerce.order.infrastructure.config.OrderProperties;
 import moe.ahao.commerce.order.infrastructure.gateway.CouponGateway;
 import moe.ahao.commerce.order.infrastructure.gateway.InventoryGateway;
+import moe.ahao.commerce.order.infrastructure.repository.impl.mongodb.OrderOperateLogRepository;
+import moe.ahao.commerce.order.infrastructure.repository.impl.hbase.OrderSnapshotRepository;
+import moe.ahao.commerce.order.infrastructure.repository.impl.hbase.data.OrderSnapshotDO;
+import moe.ahao.commerce.order.infrastructure.repository.impl.mongodb.data.OrderOperateLogDO;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.data.*;
 import moe.ahao.commerce.order.infrastructure.repository.impl.mybatis.service.*;
 import moe.ahao.commerce.product.api.dto.ProductSkuDTO;
@@ -50,13 +53,14 @@ public class CreateOrderTxService {
     @Autowired
     private OrderItemMybatisService orderItemMybatisService;
     @Autowired
-    private OrderOperateLogMybatisService orderOperateLogMybatisService;
+    private OrderOperateLogRepository orderOperateLogRepository;
     @Autowired
     private OrderPaymentDetailMybatisService orderPaymentDetailMybatisService;
     @Autowired
-    private OrderSnapshotMybatisService orderSnapshotMybatisService;
+    private OrderSnapshotRepository orderSnapshotRepository;
 
-    @GlobalTransactional(rollbackFor = Exception.class)
+    // 去除了seata AT事务
+    // @GlobalTransactional(rollbackFor = Exception.class)
     public String addNewOrder(CreateOrderCommand command, List<ProductSkuDTO> productList, CalculateOrderAmountDTO calculateOrderAmountDTO) {
         // 1. 锁定优惠券
         this.lockUserCoupon(command.getOrderId(), command.getUserId(), command.getCouponId());
@@ -132,7 +136,7 @@ public class CreateOrderTxService {
             .map(OrderDataBuilder.OrderData::getOrderOperateLog)
             .collect(Collectors.toList());
         if (!orderOperateLogDOList.isEmpty()) {
-            orderOperateLogMybatisService.saveBatch(orderOperateLogDOList);
+            orderOperateLogRepository.saveBatch(orderOperateLogDOList);
         }
 
         // 订单快照数据
@@ -141,7 +145,7 @@ public class CreateOrderTxService {
             .flatMap(List::stream)
             .collect(Collectors.toList());
         if (!orderSnapshotDOList.isEmpty()) {
-            orderSnapshotMybatisService.saveBatch(orderSnapshotDOList);
+            orderSnapshotRepository.saveBatch(orderSnapshotDOList);
         }
 
         return command.getOrderId();

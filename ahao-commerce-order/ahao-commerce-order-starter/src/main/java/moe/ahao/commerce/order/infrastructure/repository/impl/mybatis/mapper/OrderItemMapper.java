@@ -16,6 +16,7 @@ public interface OrderItemMapper extends BaseMapper<OrderItemDO> {
      * 根据订单号查询订单条目
      */
     List<OrderItemDO> selectListByOrderId(@Param("orderId") String orderId);
+    List<OrderItemDO> selectListByOrderIds(@Param("orderIds") List<String> orderIds);
 
     /**
      * 按订单号与产品类型查询订单条目
