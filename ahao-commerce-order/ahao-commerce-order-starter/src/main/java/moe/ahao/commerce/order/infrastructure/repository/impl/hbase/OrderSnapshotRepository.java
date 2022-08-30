@@ -86,6 +86,21 @@ public class OrderSnapshotRepository {
         OrderSnapshotDO orderSnapshotDO;
         List<OrderSnapshotDO> resultSnapshotList = new ArrayList<>();
         try {
+            // 下面这种hbase scan+filter的写法，是不可取的，这里是给大家演示一个hbase bad case设计
+            // rowkey设计+时间戳hash值，均匀分散，这个设计是没问题的，hbase rowkey设计里，用于避免数据热点问题的一个经典设计方案
+            // 查询的时候，直接按照substring子串搜索是不可取的
+            // 会导致一个问题，hbase最强悍的是什么，是基于rowkey整值去构建多个级别的缓存、索引，就是直接基于rowkey进行等值匹配和查询
+            // 他是大型的分布式海量数据kv读取存储系统，按照key来进行等值读取，所有优化设计，都是围绕你rowkey等值来
+            // 会导致的他有一个类似于全表扫描一样的问题，多个region会被他一个一个的扫描过去，尝试去读取每个rowkey匹配里面的orderid
+            // 要基于时间戳作为前缀的rowkey查找
+            // 性能优化的一个技巧，scan设置startRow和endRow，起始行和截止行
+            // 起始行，要设置起始的时间戳，截止行，要设置截止时间戳，设置时间戳的范围之后
+            // 就可以帮助hbase缩小他行扫描的范围，可以在一个小范围之内，快速的扫描，找到你的orderid他对应的数据
+            // 必须建议，性能优化，把订单每个订单快照插入的时候，那一个时间戳给找出来
+            // 就是说通过时间戳去设置startRow和endRow，缩小每条数据查询的范围，快速的检索这样子
+            // 把每个订单快照的插入时间戳，往前面倒推一些，往后面后推一些，形成一个范围，对起止时间戳生成纳秒级别的hash串
+            // 把这两个hash串，作为一个范围，去进行缩小范围的查询这样子
+
             // 1. 获取表
             table = connection.getTable(TableName.valueOf(TABLE_NAME));
             // 2. 构建scan请求对象
@@ -199,11 +214,19 @@ public class OrderSnapshotRepository {
     private String getRowKey(Object orderId) {
         StringJoiner rowKeyJoiner = new StringJoiner("_", "", "");
         // 获取纳秒时间戳
-        // 纳秒这个级别的时间戳，粒度已经非常细了
+        // 纳秒这个级别的时间戳，纳秒级别的时间戳，粒度已经非常非常细了，就是说是不要出现多个操作拿到的时间戳是同一个时间戳
         long timestamp = System.currentTimeMillis() * 1000000L + System.nanoTime() % 1000000L;
         // 获取纳秒时间戳hash值
         String timestampHex = MD5Hash.getMD5AsHex(Bytes.toBytes(timestamp));
         // 形成rowKey：时间戳hash值前10位_订单id
+        // 有一个很关键的优化的思路是在里面，订单数据很容易出现热点数据，热点数据，最近产生的一些订单数据
+        // 他快照都写入到了你的hbase里去，可能都会进入他的同一个region里去，数据节点里去，造成数据热点的问题，最近订单写入到了一个数据区域里去
+        // 对最近订单快照查询是最多的，就会导致说针对你的这个region里的数据他的热点查询会比较严重
+        // 导致hbase某个节点压力比较大一些
+        // rowkey为了避免数据热点的问题，我们可以采取对rowkey加时间戳作为一个前缀，时间戳是用的hash值，就可以让我们最近一段时间写入hbase的订单
+        // 分散到hbase里多个节点里去，多个region里面去，数据分散，读取的时候，对最近一段时间的订单读取，就可以分散到多个数据区域去读取，避免了数据热点的问题
+        // 数据扩展性，如果说我们一个orderid有多个snapshotType类型，有多条数据
+        // 写入多个snapshotType，用纳秒级别时间戳作为前缀，一个orderId多个数据，纳秒前缀是不同的
         return rowKeyJoiner.add(timestampHex.substring(0, ROW_KEY_LENGTH))
             .add((String) orderId)
             .toString();

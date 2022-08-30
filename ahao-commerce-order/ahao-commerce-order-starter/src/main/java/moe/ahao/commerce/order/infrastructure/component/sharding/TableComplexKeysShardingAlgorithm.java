@@ -35,6 +35,9 @@ public class TableComplexKeysShardingAlgorithm implements ComplexKeysShardingAlg
      */
     @Override
     public Collection<String> doSharding(Collection<String> tableNames, ComplexKeysShardingValue<String> shardingValue) {
+        // 有一个非常关键的企业级项目设计，单号，考虑好后续的分库分表的设计
+        // 如果说没有之前的单号设计，这个时候你做分库分表就还是挺麻烦的，如何order维度和用户维度进行归一
+        // 单号设计，起到了作用，把用户id后三位拼接为订单号的后三位，通过这个设计两个归一
         String[] columns = {"order_id", "user_id", "after_sale_id", "parent_order_id"};
 
         for (String column : columns) {

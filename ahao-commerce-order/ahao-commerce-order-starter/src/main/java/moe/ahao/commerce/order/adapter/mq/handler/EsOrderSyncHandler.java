@@ -68,29 +68,30 @@ public class EsOrderSyncHandler {
         List<String> orderIds = orders.stream().map(OrderInfoDO::getOrderId).collect(Collectors.toList());
         // 1. 订单信息
         List<EsOrderInfoDO> esOrders = orders.stream().map(this::convert).collect(Collectors.toList());
-        orderListEsRepository.saveBatch(esOrders, EsOrderInfoDO.class);
+        // orderListEsRepository.saveBatch(esOrders, EsOrderInfoDO.class);
         // 2、订单条目
         List<OrderItemDO> orderItems = orderItemMapper.selectListByOrderIds(orderIds);
         List<EsOrderItemDO> esOrderItems = orderItems.stream().map(this::convert).collect(Collectors.toList());
-        orderListEsRepository.saveBatch(esOrderItems, EsOrderItemDO.class);
+        // orderListEsRepository.saveBatch(esOrderItems, EsOrderItemDO.class);
         // 3. 订单配送信息
         List<OrderDeliveryDetailDO> orderDeliveryDetails = orderDeliveryDetailMapper.selectListByOrderIds(orderIds);
         List<EsOrderDeliveryDetailDO> esOrderDeliveryDetails = orderDeliveryDetails.stream().map(this::convert).collect(Collectors.toList());
-        orderListEsRepository.saveBatch(esOrderDeliveryDetails, EsOrderDeliveryDetailDO.class);
+        // orderListEsRepository.saveBatch(esOrderDeliveryDetails, EsOrderDeliveryDetailDO.class);
         // 4. 订单支付信息
         List<OrderPaymentDetailDO> orderPaymentDetails = orderPaymentDetailMapper.selectListByOrderIds(orderIds);
         List<EsOrderPaymentDetailDO> esOrderPaymentDetails = orderPaymentDetails.stream().map(this::convert).collect(Collectors.toList());
-        orderListEsRepository.saveBatch(esOrderPaymentDetails, EsOrderPaymentDetailDO.class);
+        // orderListEsRepository.saveBatch(esOrderPaymentDetails, EsOrderPaymentDetailDO.class);
         // 5. 订单条目价格明细
         List<OrderAmountDetailDO> orderAmountDetails = orderAmountDetailMapper.selectListByOrderIds(orderIds);
         List<EsOrderAmountDetailDO> esOrderAmountDetails = orderAmountDetails.stream().map(this::convert).collect(Collectors.toList());
-        orderListEsRepository.saveBatch(esOrderAmountDetails, EsOrderAmountDetailDO.class);
+        // orderListEsRepository.saveBatch(esOrderAmountDetails, EsOrderAmountDetailDO.class);
         // 6. 订单价格
         List<OrderAmountDO> orderAmounts = orderAmountMapper.selectListByOrderIds(orderIds);
         List<EsOrderAmountDO> esOrderAmounts = orderAmounts.stream().map(this::convert).collect(Collectors.toList());
-        orderListEsRepository.saveBatch(esOrderAmounts, EsOrderAmountDO.class);
+        // orderListEsRepository.saveBatch(esOrderAmounts, EsOrderAmountDO.class);
 
         // 7. 构建orderListQueryIndex并同步到es
+        //    只将要搜索的字段放到ES里, 不应该将全量字段放进ES, 再用查出来的ID去分库分表里查询
         Map<String, OrderDeliveryDetailDO> orderDeliveryDetailMap = orderDeliveryDetails.stream().collect(Collectors.toMap(OrderDeliveryDetailDO::getOrderId, d -> d));
         Map<String, List<OrderItemDO>> orderItemsMap = orderItems.stream().collect(Collectors.groupingBy(OrderItemDO::getOrderId));
         Map<String, List<OrderPaymentDetailDO>> orderPaymentDetailsMap = orderPaymentDetails.stream().collect(Collectors.groupingBy(OrderPaymentDetailDO::getOrderId));
