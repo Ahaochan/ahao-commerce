@@ -39,25 +39,24 @@ public abstract class AbstractOrderCancelAction extends OrderStateAction<CancelO
     @Override
     protected OrderInfoDTO onStateChangeInternal(OrderStatusChangeEnum event, CancelOrderAssembleRequest context) {
         OrderInfoDO orderInfoDO = orderConverter.orderInfoDTO2DO(context.getOrderInfoDTO());
-        List<OrderInfoDO> updateOrderList = new ArrayList<>();
         List<OrderOperateLogDO> orderOperateLogDOList = new ArrayList<>();
         String orderId = orderInfoDO.getOrderId();
 
         //  1、查询全部订单
         List<OrderInfoDO> allOrderList = orderInfoDAO.getAllByOrderId(orderId);
 
-        //  2、封装操作数据
-        for (OrderInfoDO orderInfo : allOrderList) {
-            //  更新订单数据
-            OrderInfoDO updateOrder = new OrderInfoDO();
-            updateOrder.setId(orderInfo.getId());
-            updateOrder.setOrderId(orderInfo.getOrderId());
-            updateOrder.setCancelType(context.getCancelType().toString());
-            updateOrder.setOrderStatus(OrderStatusEnum.CANCELLED.getCode());
-            updateOrder.setCancelTime(new Date());
-            updateOrderList.add(updateOrder);
 
-            // 订单操作日志数据
+        //  2、更新订单状态为已取消
+        OrderInfoDO updateOrder = new OrderInfoDO();
+        updateOrder.setCancelType(context.getCancelType().toString());
+        updateOrder.setOrderStatus(OrderStatusEnum.CANCELLED.getCode());
+        updateOrder.setCancelTime(new Date());
+        orderInfoDAO.updateByOrderIdOrParentId(updateOrder, orderId);
+
+        log.info("更新订单信息OrderInfo状态: orderId:{},status:{}", orderInfoDO.getOrderId(), orderInfoDO.getOrderStatus());
+
+        //  3、封装订单操作日志数据
+        for (OrderInfoDO orderInfo : allOrderList) {
             OrderOperateLogDO orderOperateLogDO = new OrderOperateLogDO();
             orderOperateLogDO.setOrderId(orderInfo.getOrderId());
             orderOperateLogDO.setPreStatus(getPreStatus());
@@ -65,10 +64,6 @@ public abstract class AbstractOrderCancelAction extends OrderStateAction<CancelO
             setOperateTypeAndRemark(orderOperateLogDO, context.getCancelType());
             orderOperateLogDOList.add(orderOperateLogDO);
         }
-
-        //  3、更新订单状态为已取消
-        orderInfoDAO.updateBatchById(updateOrderList);
-        log.info("更新订单信息OrderInfo状态: orderId:{},status:{}", orderInfoDO.getOrderId(), orderInfoDO.getOrderStatus());
 
         //  4、新增订单操作操作日志表
         orderOperateLogDAO.batchSave(orderOperateLogDOList);

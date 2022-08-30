@@ -82,8 +82,10 @@ public class RocketMqServiceImpl implements RocketMqService {
 
         // 1、从数据库查询订单
         OrderInfoDTO orderInfoDTO = orderConverter.orderInfoDO2DTO(orderInfoDAO.getByOrderId(orderId));
+
         // 2、构造标准订单变更消息
         OrderStdChangeEvent stdChangeEvent = buildStdEvent(orderStatusChangeEnum, orderInfoDTO);
+
         // 3、发送标准变更消息
         sendMessage(JSONObject.toJSONString(stdChangeEvent), stdChangeEvent.getOrderId(), orderStatusChangeEnum.getTags());
     }
@@ -121,7 +123,6 @@ public class RocketMqServiceImpl implements RocketMqService {
             stdChangeEvent.setOutStockTime(dateProvider.formatDatetime(deliveryDetail.getOutStockTime()));
             stdChangeEvent.setSignedTime(dateProvider.formatDatetime(deliveryDetail.getSignedTime()));
         }
-
         return stdChangeEvent;
     }
 
@@ -151,7 +152,7 @@ public class RocketMqServiceImpl implements RocketMqService {
                 tags, orderId, (mqs, message, arg) -> {
                     //根据订单id选择发送queue
                     String orderId1 = (String) arg;
-                    long index = hash(orderId1) % mqs.size(); // 通过一个订单id对应的消息都发送到mq queue里去
+                    long index = hash(orderId1) % mqs.size();
                     return mqs.get((int) index);
                 }, orderId);
     }

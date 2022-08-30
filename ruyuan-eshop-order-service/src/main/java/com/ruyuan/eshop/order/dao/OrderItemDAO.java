@@ -1,6 +1,7 @@
 package com.ruyuan.eshop.order.dao;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.ruyuan.eshop.common.dao.BaseDAO;
 import com.ruyuan.eshop.order.domain.entity.OrderItemDO;
 import com.ruyuan.eshop.order.mapper.OrderItemMapper;
@@ -65,7 +66,11 @@ public class OrderItemDAO extends BaseDAO<OrderItemMapper, OrderItemDO> {
         LambdaQueryWrapper<OrderItemDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderItemDO::getOrderId, orderId)
                 .eq(OrderItemDO::getSkuCode, skuId);
-        return getOne(queryWrapper);
+        List<OrderItemDO> list = list(queryWrapper);
+        if(CollectionUtils.isNotEmpty(list)) {
+            return list.get(0);
+        }
+        return null;
     }
 
 }

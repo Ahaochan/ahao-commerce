@@ -33,11 +33,6 @@ public class AfterSaleDetailBuilder {
 
     private boolean allNull = true;
 
-    /**
-     * 降级开关
-     */
-    private boolean downgrade = false;
-
     @Autowired
     private AfterSaleInfoDAO afterSaleInfoDAO;
 
@@ -53,18 +48,10 @@ public class AfterSaleDetailBuilder {
     @Autowired
     private AfterSaleConverter afterSaleConverter;
 
-    @Autowired
-    private EsAfterSaleService esAfterSaleService;
-
     public AfterSaleDetailBuilder buildAfterSale(AfterSaleQueryDataTypeEnums dataType, String afterSaleId) {
         if (AfterSaleQueryDataTypeEnums.AFTER_SALE.equals(dataType)) {
             // 查询售后单
-            AfterSaleInfoDO afterSaleInfoDO = null;
-            if (!downgrade) {
-                afterSaleInfoDO = afterSaleInfoDAO.getOneByAfterSaleId(afterSaleId);
-            } else {
-                afterSaleInfoDO = esAfterSaleService.getAfterSale(afterSaleId);
-            }
+            AfterSaleInfoDO afterSaleInfoDO = afterSaleInfoDAO.getOneByAfterSaleId(afterSaleId);
             if (isNull(afterSaleInfoDO)) {
                 return this;
             }
@@ -76,12 +63,7 @@ public class AfterSaleDetailBuilder {
     public AfterSaleDetailBuilder buildAfterSaleItems(AfterSaleQueryDataTypeEnums dataType, String afterSaleId) {
         if (AfterSaleQueryDataTypeEnums.AFTER_SALE_ITEM.equals(dataType)) {
             // 查询售后单条目
-            List<AfterSaleItemDO> afterSaleItems = null;
-            if (!downgrade) {
-                afterSaleItems = afterSaleItemDAO.listByAfterSaleId(afterSaleId);
-            } else {
-                afterSaleItems = esAfterSaleService.listAfterSaleItems(afterSaleId);
-            }
+            List<AfterSaleItemDO> afterSaleItems = afterSaleItemDAO.listByAfterSaleId(afterSaleId);
             if (isEmpty(afterSaleItems)) {
                 return this;
             }
@@ -93,12 +75,7 @@ public class AfterSaleDetailBuilder {
     public AfterSaleDetailBuilder buildAfterSaleRefunds(AfterSaleQueryDataTypeEnums dataType, String afterSaleId) {
         if (AfterSaleQueryDataTypeEnums.AFTER_SALE_REFUND.equals(dataType)) {
             // 查询售后退款单
-            List<AfterSaleRefundDO> afterSaleRefunds = null;
-            if (!downgrade) {
-                afterSaleRefunds = afterSaleRefundDAO.listByAfterSaleId(afterSaleId);
-            } else {
-                afterSaleRefunds = esAfterSaleService.listAfterSaleRefunds(afterSaleId);
-            }
+            List<AfterSaleRefundDO> afterSaleRefunds = afterSaleRefundDAO.listByAfterSaleId(afterSaleId);
             if (isEmpty(afterSaleRefunds)) {
                 return this;
             }
@@ -128,13 +105,6 @@ public class AfterSaleDetailBuilder {
 
     public boolean allNull() {
         return allNull;
-    }
-
-    /**
-     * 设置降级，查询es
-     */
-    public void setDowngrade() {
-        downgrade = true;
     }
 
     private boolean isNull(Object obj) {

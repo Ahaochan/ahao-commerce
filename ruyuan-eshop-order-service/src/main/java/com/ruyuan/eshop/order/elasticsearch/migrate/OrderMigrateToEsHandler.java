@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 import com.ruyuan.eshop.common.utils.LoggerFormat;
 import com.ruyuan.eshop.order.dao.OrderInfoDAO;
 import com.ruyuan.eshop.order.domain.entity.OrderInfoDO;
-import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderFullDataAddHandler;
+import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderInfoInsertHandler;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ public class OrderMigrateToEsHandler extends AbstractMigrateToEsHandler{
     private ThreadPoolTaskExecutor taskExecutor;
 
     @Autowired
-    private EsOrderFullDataAddHandler esOrderFullDataAddHandler;
+    private EsOrderInfoInsertHandler esOrderInfoInsertHandler;
 
     private static long limit = 2000L;
 
@@ -64,7 +64,7 @@ public class OrderMigrateToEsHandler extends AbstractMigrateToEsHandler{
                     List<String> orderIds = list.stream().map(OrderInfoDO::getOrderId).collect(Collectors.toList());
                     taskExecutor.execute(()->{
                         try {
-                            esOrderFullDataAddHandler.sync(list,orderIds,-1);
+                            esOrderInfoInsertHandler.sync(list,orderIds,-1);
                         }catch (Exception e) {
                             log.error(LoggerFormat
                                     .build()

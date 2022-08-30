@@ -110,10 +110,9 @@ public class AfterSaleQueryServiceImpl implements AfterSaleQueryService {
     }
 
     @Override
-    public PagingInfo<AfterSaleOrderDetailDTO> executeListQueryV2(AfterSaleQuery query, Boolean downgrade, AfterSaleQueryDataTypeEnums... queryDataTypes) throws Exception {
+    public PagingInfo<AfterSaleOrderDetailDTO> executeListQueryV2(AfterSaleQuery query, AfterSaleQueryDataTypeEnums... queryDataTypes) throws Exception {
         log.info(LoggerFormat.build()
                 .remark("afterSale:executeListQuery_v2->request")
-                .data("downgrade", downgrade)
                 .finish());
 
         //1、组装业务查询规则
@@ -140,7 +139,6 @@ public class AfterSaleQueryServiceImpl implements AfterSaleQueryService {
         log.info(LoggerFormat.build()
                 .remark("afterSale:executeListQuery_v2->es->response")
                 .data("esResponseDTO", esResponseDTO)
-                .data("downgrade", downgrade)
                 .finish());
         Integer total = (int) esResponseDTO.getTotal();
 
@@ -149,7 +147,7 @@ public class AfterSaleQueryServiceImpl implements AfterSaleQueryService {
             List<AfterSaleListQueryIndex> queryIndices = esResponseDTO.getData().toJavaList(AfterSaleListQueryIndex.class);
             // 从数据库/es查询售后单详情DTO
             queryIndices.forEach(index -> {
-                afterSaleOrderDetailDTOs.add(buildAfterSaleDetail(index.getAfterSaleId(), downgrade, queryDataTypes));
+                afterSaleOrderDetailDTOs.add(buildAfterSaleDetail(index.getAfterSaleId(), queryDataTypes));
             });
         }
 
@@ -192,14 +190,8 @@ public class AfterSaleQueryServiceImpl implements AfterSaleQueryService {
                 .data("afterSaleId", afterSaleId)
                 .data("queryDataTypes", queryDataTypes)
                 .finish());
-        try {
-            // 构建订单详情DTO
-            return buildAfterSaleDetail(afterSaleId, false, queryDataTypes);
-        } catch (Exception e) {
-            log.error("查询售后单详情异常，err={},e", e);
-            log.info("进行降级，查询es");
-            return buildAfterSaleDetail(afterSaleId, true, queryDataTypes);
-        }
+        // 构建订单详情DTO
+        return buildAfterSaleDetail(afterSaleId, queryDataTypes);
     }
 
     @Override
@@ -226,19 +218,16 @@ public class AfterSaleQueryServiceImpl implements AfterSaleQueryService {
      * 构建售后单详情DTO
      *
      * @param afterSaleId    售后单id
-     * @param downgrade      降级开关
      * @param queryDataTypes 查询项
      * @return
      */
-    private AfterSaleOrderDetailDTO buildAfterSaleDetail(String afterSaleId, boolean downgrade, AfterSaleQueryDataTypeEnums... queryDataTypes) {
+    private AfterSaleOrderDetailDTO buildAfterSaleDetail(String afterSaleId, AfterSaleQueryDataTypeEnums... queryDataTypes) {
         if (Objects.isNull(queryDataTypes) || queryDataTypes.length == 0) {
             queryDataTypes = new AfterSaleQueryDataTypeEnums[]{AfterSaleQueryDataTypeEnums.AFTER_SALE};
         }
         AfterSaleDetailBuilder afterSaleDetailBuilder =
                 springApplicationContext.getBean(AfterSaleDetailBuilder.class);
-        if (downgrade) {
-            afterSaleDetailBuilder.setDowngrade();
-        }
+
         for (AfterSaleQueryDataTypeEnums dataType : queryDataTypes) {
             afterSaleDetailBuilder.buildAfterSale(dataType, afterSaleId)
                     .buildAfterSaleItems(dataType, afterSaleId)

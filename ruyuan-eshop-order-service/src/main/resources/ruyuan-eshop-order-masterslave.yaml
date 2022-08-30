@@ -1,0 +1,494 @@
+spring:
+  application:
+    name: ruyuan-eshop-order
+
+  shardingsphere:
+    database:
+      size: 8
+    tableSize:
+      size: 64
+    props:
+      sql:
+        show: false
+    # 数据源配置
+    datasource:
+      names: dsmaster0,dsslave0,dsmaster1,dsslave1,dsmaster2,dsslave2,dsmaster3,dsslave3,dsmaster4,dsslave4,dsmaster5,dsslave5,dsmaster6,dsslave6,dsmaster7,dsslave7
+      dsmaster0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf6sh5l21106k9orz.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_0?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf649t5c2g921yb6v.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_0?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf67z26a6vf36887w.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_1?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf6v8581u3s0jt529.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_1?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster2:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf6as81b3m3z91h8l.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_2?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave2:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf6c45l47e7u45b75.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_2?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster3:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf63myc55xvz5auaz.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_3?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave3:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf6wj69hxuedu7gk2.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_3?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster4:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf62y7gi7ktwmh6yx.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_4?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave4:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf695nu8iidno9t1u.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_4?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster5:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf6mdb23dsp7yb22i.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_5?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave5:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf6p820k12j8n0bt6.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_5?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster6:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf6ag473s839d6hor.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_6?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave6:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf6u1fh8846ct02ss.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_6?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsmaster7:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rm-uf69alv89q5k8op36.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_7?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+      dsslave7:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://rr-uf63v87p7kv65al8u.mysql.rds.aliyuncs.com:3306/ruyuan_eshop_order_7?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: Ruyuan123!@#
+        min-idle: 50
+        initial-size: 50
+        max-active: 200
+        max-wait: 6000
+    # 分片配置
+    sharding:
+      # 读写分离配置
+      master-slave-rules:
+        ds0:
+          name: ms0
+          master-data-source-name: dsmaster0
+          slave-data-source-names: dsslave0
+        ds1:
+          name: ms1
+          master-data-source-name: dsmaster1
+          slave-data-source-names: dsslave1
+        ds2:
+          name: ms2
+          master-data-source-name: dsmaster2
+          slave-data-source-names: dsslave2
+        ds3:
+          name: ms3
+          master-data-source-name: dsmaster3
+          slave-data-source-names: dsslave3
+        ds4:
+          name: ms4
+          master-data-source-name: dsmaster4
+          slave-data-source-names: dsslave4
+        ds5:
+          name: ms5
+          master-data-source-name: dsmaster5
+          slave-data-source-names: dsslave5
+        ds6:
+          name: ms6
+          master-data-source-name: dsmaster6
+          slave-data-source-names: dsslave6
+        ds7:
+          name: ms7
+          master-data-source-name: dsmaster7
+          slave-data-source-names: dsslave7
+
+      # 默认的数据源  order_auto_no、order_cancel_scheduled_task、undo_log等三个表不做分库分库，都会走默认的数据源
+      default-data-source-name: ds0
+      # 默认的分库策略
+      default-database-strategy:
+        standard:
+          sharding-column: order_id
+          precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabasePreciseShardingAlgorithm
+      # 分表配置
+      tables:
+        # 只需要分库的表配置
+        ruyuan_tend_consistency_task:
+          actual-data-nodes: ds$->{0..7}.ruyuan_tend_consistency_task
+          database-strategy:
+            inline:
+              sharding-column: shard_key
+              algorithm-expression: ds$->{shard_key % 8}
+        # 正向订单业务表
+        order_info:
+          actual-data-nodes: ds$->{0..7}.order_info_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        order_item:
+          actual-data-nodes: ds$->{0..7}.order_item_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        order_payment_detail:
+          actual-data-nodes: ds$->{0..7}.order_payment_detail_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        order_amount:
+          actual-data-nodes: ds$->{0..7}.order_amount_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: order_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
+        order_amount_detail:
+          actual-data-nodes: ds$->{0..7}.order_amount_detail_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: order_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
+        order_operate_log:
+          actual-data-nodes: ds$->{0..7}.order_operate_log_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: order_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
+        order_snapshot:
+          actual-data-nodes: ds$->{0..7}.order_snapshot_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: order_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
+        order_delivery_detail:
+          actual-data-nodes: ds$->{0..7}.order_delivery_detail_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        # 逆向售后业务表
+        after_sale_info:
+          actual-data-nodes: ds$->{0..7}.after_sale_info_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        after_sale_item:
+          actual-data-nodes: ds$->{0..7}.after_sale_item_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        after_sale_log:
+          actual-data-nodes: ds$->{0..7}.after_sale_log_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: after_sale_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
+        after_sale_refund:
+          actual-data-nodes: ds$->{0..7}.after_sale_refund_$->{0..63}
+          database-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomDatabaseComplexKeysShardingAlgorithm
+          table-strategy:
+            complex:
+              sharding-columns: order_id,user_id,after_sale_id,parent_order_id
+              algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+      # 绑定表配置
+      binding-tables:
+        - order_info,order_item,order_payment_detail,order_delivery_detail
+        - after_sale_info,after_sale_item,after_sale_refund
+
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 172.19.16.47:8848
+        username: nacos
+        password: nacos
+    sentinel:
+      transport:
+        dashboard: 172.19.16.47:8080
+        port: 18005
+      # 使用nacos做持久化
+      datasource:
+        # 微服务流控配置
+        flow:
+          nacos:
+            server-addr: 172.19.16.47:8848
+            namespace: sentinel
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-flow-rules.json
+            data-type: json
+            rule-type: flow
+        # 熔断降级配置
+        degrade:
+          nacos:
+            server-addr: 172.19.16.47:8848
+            namespace: sentinel
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-degrade-rules.json
+            data-type: json
+            rule-type: degrade
+        # 热点规则
+        param-flow:
+          nacos:
+            server-addr: 172.19.16.47:8848
+            namespace: sentinel
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-param-flow-rules.json
+            data-type: json
+            rule-type: param-flow
+        # 系统规则
+        system:
+          nacos:
+            server-addr: 172.19.16.47:8848
+            namespace: sentinel
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-system-rules.json
+            data-type: json
+            rule-type: system
+        # 授权规则
+        authority:
+          nacos:
+            server-addr: 172.19.16.47:8848
+            namespace: sentinel
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-authority-rules.json
+            data-type: json
+            rule-type: authority
+
+  redis:
+    host: r-uf618w6smevt3tnc20pd.redis.rds.aliyuncs.com
+    port: 6379
+    password: r-uf618w6smevt3tnc20:Ruyuan456$%^
+    timeout: 3000
+    database: 0
+
+  data:
+    mongodb:
+      uri: mongodb://root:Ruyuan2020@dds-uf693783b7b4a6741676-pub.mongodb.rds.aliyuncs.com:3717,dds-uf693783b7b4a6742734-pub.mongodb.rds.aliyuncs.com:3717,dds-uf693783b7b4a6743209-pub.mongodb.rds.aliyuncs.com:3717/admin?readPreference=secondary&replicaSet=mgset-58425750
+      database: order
+
+server:
+  port: 8005
+
+dubbo:
+  scan:
+    base-packages: com.ruyuan.eshop.order.api
+  registry:
+    address: spring-cloud://172.19.16.47
+  protocol:
+    name: dubbo
+    port: 28085
+  consumer:
+    check: false
+  provider:
+    threads: 800
+    actives: 200
+  cloud:
+    subscribed-services: ruyuan-eshop-order,ruyuan-eshop-product,ruyuan-eshop-market,ruyuan-eshop-inventory,ruyuan-eshop-pay,ruyuan-eshop-customer,ruyuan-eshop-risk,ruyuan-eshop-address,ruyuan-eshop-fulfill,ruyuan-eshop-wms,ruyuan-eshop-tms
+
+
+rocketmq:
+  name-server: 172.19.16.48:9876
+
+#xxl-job配置
+xxl:
+  job:
+    admin:
+      addresses: http://47.101.212.158:8080/xxl-job-admin
+    executor:
+      appname: ruyuan-order-service
+
+ruyuan:
+  tend:
+    consistency:
+      parallel:
+        pool:
+          # 不配置默认值就是5
+          thread-max-pool-size: 40
+          # 不配置默认值就是5
+          thread-core-pool-size: 40
+          # 不配置默认值就是60
+          thread-pool-keep-alive-time: 60
+          # 不配置默认值就是SECONDS
+          thread-pool-keep-alive-time-unit: SECONDS
+          # 不配置默认值就是100
+          thread-pool-queue-size: 20000
+      action:
+        # 默认值是0 也就是 只要出现失败的情况，就会走降级逻辑，这里记的配置降级类。如果没有配置降级类，则不会走降级逻辑
+        fail-count-threshold: 0
+      shard:
+        # 表示任务表一个库中，如果确认使用单库模式，可以不配置 默认就是false  这里只是为了说明，就写了出来
+        task-sharded: true
+
+# elasticsearch相关配置信息
+elasticsearch:
+  # 集群节点，多个节点采用逗号分隔，需要替换为ecs的ip
+  clusterNodes: 106.14.225.191:9200,47.100.18.187:9200,106.14.182.180:9200
+  shards-number: 3
+  replicas-number: 2
+  return-size: 10000
+  search-result-size: 20
+
+hbase:
+  config:
+    hbase:
+      zookeeper:
+        quorum: ld-uf693766v8rlk31s1-proxy-hbaseue-pub.hbaseue.rds.aliyuncs.com:30020
+      client:
+        username: root
+        password: root
+
+management:
+  health:
+    db:
+      enabled: false
+
+canal:
+  binlog:
+    consumer:
+      enable: true
+
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

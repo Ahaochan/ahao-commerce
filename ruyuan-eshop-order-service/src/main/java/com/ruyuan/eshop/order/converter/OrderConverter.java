@@ -385,4 +385,20 @@ public interface OrderConverter {
      * @return 对象
      */
     AfterSaleItemDO orderItemDO2AfterSaleItemDO(OrderItemDTO orderItemDTO);
+
+    /**
+     * 转换对象
+     *
+     * @param orderAmountRequest 对象
+     * @return 对象
+     */
+    CalculateOrderAmountDTO.OrderAmountDTO convertOrderAmountRequest(CalculateOrderAmountRequest.OrderAmountRequest orderAmountRequest);
+
+    /**
+     * 转换对象
+     *
+     * @param orderAmountRequestList 对象
+     * @return 对象
+     */
+    List<CalculateOrderAmountDTO.OrderAmountDTO> convertOrderAmountRequest(List<CalculateOrderAmountRequest.OrderAmountRequest> orderAmountRequestList);
 }

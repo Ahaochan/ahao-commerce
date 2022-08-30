@@ -34,9 +34,10 @@ public class DeductProductStockProcessor {
      */
     @Transactional(rollbackFor = Exception.class)
     public void doDeduct(DeductStockDTO deductStock) {
-        // 我在这里异常，库存系统的本地事务会回滚
+
         // 1、扣减mysql商品库存
         productStockDAO.deductProductStock(deductStock.getSkuCode(), deductStock.getSaleQuantity());
+
         // 2、增加库存扣减日志表
         productStockLogDAO.save(buildStockLog(deductStock));
     }

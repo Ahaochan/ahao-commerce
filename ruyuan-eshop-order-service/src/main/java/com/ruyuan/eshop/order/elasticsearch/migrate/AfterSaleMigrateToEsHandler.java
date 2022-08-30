@@ -4,10 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.ruyuan.eshop.common.utils.LoggerFormat;
 import com.ruyuan.eshop.order.dao.AfterSaleInfoDAO;
-import com.ruyuan.eshop.order.dao.OrderInfoDAO;
 import com.ruyuan.eshop.order.domain.entity.AfterSaleInfoDO;
-import com.ruyuan.eshop.order.domain.entity.OrderInfoDO;
-import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleFullDataAddHandler;
+import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleInsertHandler;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +34,7 @@ public class AfterSaleMigrateToEsHandler extends AbstractMigrateToEsHandler{
     private ThreadPoolTaskExecutor taskExecutor;
 
     @Autowired
-    private EsAfterSaleFullDataAddHandler esAfterSaleFullDataAddHandler;
+    private EsAfterSaleInsertHandler esAfterSaleInsertHandler;
 
     private static long limit = 2000L;
 
@@ -66,7 +64,7 @@ public class AfterSaleMigrateToEsHandler extends AbstractMigrateToEsHandler{
                     List<String> afterSaleIds = list.stream().map(AfterSaleInfoDO::getAfterSaleId).collect(Collectors.toList());
                     taskExecutor.execute(()->{
                         try {
-                            esAfterSaleFullDataAddHandler.sync(list,afterSaleIds,-1);
+                            esAfterSaleInsertHandler.sync(list,afterSaleIds,-1);
                         }catch (Exception e) {
                             log.error(LoggerFormat
                                     .build()

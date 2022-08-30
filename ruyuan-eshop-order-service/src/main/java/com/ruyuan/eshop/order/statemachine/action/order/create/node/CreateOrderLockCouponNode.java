@@ -59,5 +59,4 @@ public class CreateOrderLockCouponNode extends RollbackProcessor {
     public void doRollback(ReleaseUserCouponRequest releaseUserCouponRequest) {
         marketRemote.releaseUserCoupon(releaseUserCouponRequest);
     }
-
 }

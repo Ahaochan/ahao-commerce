@@ -23,10 +23,6 @@ public class CustomerAuditAssembleRequest implements Serializable {
     private String orderId;
 
     /**
-     * 售后支付单id
-     */
-    private Long afterSaleRefundId;
-    /**
      * 客服审核时间
      */
     private Date reviewTime;

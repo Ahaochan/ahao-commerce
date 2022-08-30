@@ -73,11 +73,10 @@ public class SegmentBuffer {
     }
 
     public SegmentBuffer() {
-        // 双缓冲机制，segment buffer里，持有两个segment，双缓冲机制，可以互相患者使用的
         segments = new Segment[]{new Segment(this), new Segment(this)};
         currentPos = 0;
         nextReady = false;
-        initOk = false; // 业务标识，双缓冲里面的核心分段数据，是懒加载的，不会说一开始就从db里加载
+        initOk = false;
         threadRunning = new AtomicBoolean(false);
         lock = new ReentrantReadWriteLock();
     }

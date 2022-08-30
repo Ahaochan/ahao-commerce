@@ -16,7 +16,6 @@ import com.ruyuan.eshop.order.elasticsearch.enums.EsAnalyzerEnum;
 import com.ruyuan.eshop.order.elasticsearch.enums.EsDataTypeEnum;
 import com.ruyuan.eshop.order.elasticsearch.enums.EsIndexNameEnum;
 import com.ruyuan.eshop.order.exception.OrderBizException;
-import com.ruyuan.eshop.order.utils.MD5Util;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -61,11 +60,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 /**
@@ -114,10 +116,15 @@ public class EsClientService {
 
     @Value("${elasticsearch.shards-number}")
     Integer shardsNumber;
+
     @Value("${elasticsearch.replicas-number}")
     Integer replicasNumber;
+
     @Value("${elasticsearch.return-size}")
     Integer returnSize;
+
+    @Value("${elasticsearch.search-result-size}")
+    Integer searchResultSize;
 
     /**
      * create index
@@ -383,53 +390,53 @@ public class EsClientService {
      * @return 检查结果
      */
     public CheckOrderStatusConsistencyResultDTO checkOrderInfoDbAndEsDataConsistency(List<OrderInfoDO> orderInfoDOList) {
-        StringJoiner orderStatusJoiner = new StringJoiner("", "", "");
-        try {
-            // 拿到数据库中所有订单id的集合
-            List<String> orderIds = orderInfoDOList.stream().map(OrderInfoDO::getOrderId).collect(Collectors.toList());
-            // 拿到查询es的响应结果
-            MultiGetItemResponse[] multiGetItemResponses = multiGetOrderInfo(EsIndexNameEnum.ORDER_INFO, orderIds);
-            if (multiGetItemResponses == null || multiGetItemResponses.length == 0) {
-                return CheckOrderStatusConsistencyResultDTO.builder()
-                        .result(false)
-                        .build();
-            }
-            // 遍历结果 形成状态的字符串
-            for (MultiGetItemResponse response : multiGetItemResponses) {
-                String sourceAsString = response.getResponse().getSourceAsString();
-                // 对于没有找到的订单跳过
-                if (StringUtils.isEmpty(sourceAsString)) {
-                    continue;
-                }
-                OrderInfoDO orderInfoDO = JSONUtil.toBean(sourceAsString, OrderInfoDO.class);
-
-                Integer orderStatus = orderInfoDO.getOrderStatus();
-                orderStatusJoiner.add(orderStatus.toString());
-            }
-            // 根据数据库中的订单数据，形成状态的字符串
-            String dbOrderStatusStr = orderInfoDOList.stream().map(item->item.getOrderStatus().toString())
-                    .collect(Collectors.joining(""));
-
-            // 数据库中的订单状态的md5值
-            String dbOrderStatusMd5Str = MD5Util.getMD5Str(dbOrderStatusStr);
-            // es中订单状态的md5值
-            String esOrderStatusMd5Str = MD5Util.getMD5Str(orderStatusJoiner.toString());
-            // 对比结果
-            boolean orderStatusConsistencyResult = dbOrderStatusMd5Str.equals(esOrderStatusMd5Str);
-            // 如果md5值不同，找出有哪些订单与数据库中的状态是不同的
-            if (!orderStatusConsistencyResult) {
-                // 找出es与数据库中订单状态不同的订单
-                List<OrderInfoDO> diffOrderInfos = findOrderStatusDiff(orderInfoDOList, multiGetItemResponses);
-                if (CollectionUtils.isNotEmpty(diffOrderInfos)) {
-                    return CheckOrderStatusConsistencyResultDTO.builder()
-                            .result(true)
-                            .diffOrderInfos(diffOrderInfos)
-                            .build();
-                }
-            }
-        } catch (IOException e) {
-            log.error("批量查询订单文档时，发生异常", e);
-        }
+//        StringJoiner orderStatusJoiner = new StringJoiner("", "", "");
+//        try {
+//            // 拿到数据库中所有订单id的集合
+//            List<String> orderIds = orderInfoDOList.stream().map(OrderInfoDO::getOrderId).collect(Collectors.toList());
+//            // 拿到查询es的响应结果
+//            MultiGetItemResponse[] multiGetItemResponses = multiGetOrderInfo(EsIndexNameEnum.ORDER_INFO, orderIds);
+//            if (multiGetItemResponses == null || multiGetItemResponses.length == 0) {
+//                return CheckOrderStatusConsistencyResultDTO.builder()
+//                        .result(false)
+//                        .build();
+//            }
+//            // 遍历结果 形成状态的字符串
+//            for (MultiGetItemResponse response : multiGetItemResponses) {
+//                String sourceAsString = response.getResponse().getSourceAsString();
+//                // 对于没有找到的订单跳过
+//                if (StringUtils.isEmpty(sourceAsString)) {
+//                    continue;
+//                }
+//                OrderInfoDO orderInfoDO = JSONUtil.toBean(sourceAsString, OrderInfoDO.class);
+//
+//                Integer orderStatus = orderInfoDO.getOrderStatus();
+//                orderStatusJoiner.add(orderStatus.toString());
+//            }
+//            // 根据数据库中的订单数据，形成状态的字符串
+//            String dbOrderStatusStr = orderInfoDOList.stream().map(item->item.getOrderStatus().toString())
+//                    .collect(Collectors.joining(""));
+//
+//            // 数据库中的订单状态的md5值
+//            String dbOrderStatusMd5Str = MD5Util.getMD5Str(dbOrderStatusStr);
+//            // es中订单状态的md5值
+//            String esOrderStatusMd5Str = MD5Util.getMD5Str(orderStatusJoiner.toString());
+//            // 对比结果
+//            boolean orderStatusConsistencyResult = dbOrderStatusMd5Str.equals(esOrderStatusMd5Str);
+//            // 如果md5值不同，找出有哪些订单与数据库中的状态是不同的
+//            if (!orderStatusConsistencyResult) {
+//                // 找出es与数据库中订单状态不同的订单
+//                List<OrderInfoDO> diffOrderInfos = findOrderStatusDiff(orderInfoDOList, multiGetItemResponses);
+//                if (CollectionUtils.isNotEmpty(diffOrderInfos)) {
+//                    return CheckOrderStatusConsistencyResultDTO.builder()
+//                            .result(true)
+//                            .diffOrderInfos(diffOrderInfos)
+//                            .build();
+//                }
+//            }
+//        } catch (IOException e) {
+//            log.error("批量查询订单文档时，发生异常", e);
+//        }
         return CheckOrderStatusConsistencyResultDTO.builder()
                 .result(false)
                 .build();
@@ -500,10 +507,11 @@ public class EsClientService {
      */
     public SearchHits search_(EsIndexNameEnum esIndexName, SearchSourceBuilder searchSourceBuilder) throws IOException {
         SearchRequest searchRequest = new SearchRequest(esIndexName.getName());
+        // 设置查询es返回size
+        searchSourceBuilder.size(searchResultSize);
+        // 设置查询es在指定时间内返回结果
+        searchSourceBuilder.timeout(new TimeValue(1, TimeUnit.SECONDS));
         searchRequest.source(searchSourceBuilder);
-        if (searchSourceBuilder.from() == -1) {
-            searchSourceBuilder.size(returnSize);
-        }
 
         // 查询es
         SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);

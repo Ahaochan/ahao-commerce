@@ -31,6 +31,7 @@ import com.ruyuan.eshop.pay.domain.dto.PayOrderDTO;
 import com.ruyuan.eshop.pay.domain.request.PayOrderRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.shardingsphere.api.hint.HintManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +69,6 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderConverter orderConverter;
 
-    // 状态机工厂，是组件，专门是用来创建状态机的
     @Autowired
     private StateMachineFactory stateMachineFactory;
 
@@ -116,24 +116,8 @@ public class OrderServiceImpl implements OrderService {
                 .finish());
 
         // 状态机流转
-        // 分析一下这块的代码，StateMachineFactory，状态机工厂，工厂设计模式，来创建出来订单状态机
-        // 刚开始初始化订单状态机的时候，订单初始的状态state，是null
-        // 通过状态机fire触发了一个状态流转，把订单状态从null，流转到了created状态，基于状态机触发了状态的流转，把request对象作为数据传递
-        // 状态机进行了状态流转的时候，必然会触发说你的状态流转到created以后，要执行一个action动作，每个state -> action，猜测一下
-        // 如果执行了created action，此时就必然会导致生单业务流程编排和触发
-        // 最终一致性框架，业务流程编排框架，我们之前用了2周时间，已经分析的极为的透彻了
-        // 研究一下，状态机到底是如何来实现的，状态机我们没有自研，而是用的是开源的框架，
-
-        // 基于squirrel框架，直接就可以拿到订单状态机，发生什么事件，会导致状态如何流转，调用他的什么方法
-        // 全部都定义好了
         StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(OrderStatusEnum.NULL);
-        // 我们还把创建订单request对象传递进来了，这个对象，是需要后面来进行使用的
-        // 状态机，初始的状态是null，创建事件，触发了以后，会从null -> created，流转之后，会在这里触发状态机里的方法的执行
         orderStateMachine.fire(OrderStatusChangeEnum.ORDER_CREATED, createOrderRequest);
-
-        // 基于状态机触发主单创建事件，触发null->created流转，触发created action，触发生单业务流程编排
-        // 每次生单完成了，post里，把这个订单状态变更，推送到消息总线里去，mq把你的所有状态变更，都推送过去这样子
-        // created action，post逻辑，判断一下是否要进行拆单，对每个子单跑一下子单生单业务流程编排
 
         // 返回订单信息
         CreateOrderDTO createOrderDTO = new CreateOrderDTO();
@@ -148,49 +132,55 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PrePayOrderDTO prePayOrder(PrePayOrderRequest prePayOrderRequest) {
-        log.info(LoggerFormat.build()
-                .remark("prePayOrder->request")
-                .data("request", prePayOrderRequest)
-                .finish());
 
-        // 提取业务参数
-        String orderId = prePayOrderRequest.getOrderId();
-        Integer payAmount = prePayOrderRequest.getPayAmount();
-
-        // 入参检查
-        checkPrePayOrderRequestParam(prePayOrderRequest, orderId, payAmount);
-
-        // 加分布式锁（与订单支付回调时加的是同一把锁）
-        // 分布式锁去确保支付并发问题
-        String key = RedisLockKeyConstants.ORDER_PAY_KEY + orderId;
-        prePayOrderLock(key);
+        HintManager hintManager = HintManager.getInstance();
         try {
-            // 幂等性检查
-            checkPrePayOrderInfo(orderId, payAmount);
+            // 订单预支付流程事务既有写，也有读，并且是读操作在前，
+            // 强制所有的查询从主库查询
+            hintManager.setMasterRouteOnly();
 
-            // 调用支付系统进行预支付
-            // 直接在里调用支付系统的接口，对第三方支付平台，去发起支付请求和操作
-            PayOrderRequest payOrderRequest = orderConverter.convertPayOrderRequest(prePayOrderRequest);
-            PayOrderDTO payOrderDTO = payRemote.payOrder(payOrderRequest);
-
-            // 状态机流转 -> 更新支付信息
-            OrderStatusChangeEnum statusChangeEnum = OrderStatusChangeEnum.ORDER_PREPAY;
-            // 预支付的时候，状态流转是created to created，状态是不会变化，拿到订单预支付的事件
-            // 这个订单状态机，他的初始化的状态，就是created
-            // 会根据你的事件名称，prepay事件，去获取到对应的action，来执行action逻辑
-            StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(statusChangeEnum.getFromStatus());
-            orderStateMachine.fire(statusChangeEnum, payOrderDTO);
-
-            // 返回结果
-            PrePayOrderDTO prePayOrderDTO = orderConverter.convertPrePayOrderRequest(payOrderDTO);
             log.info(LoggerFormat.build()
-                    .remark("prePayOrder->response")
-                    .data("response", prePayOrderDTO)
+                    .remark("prePayOrder->request")
+                    .data("request", prePayOrderRequest)
                     .finish());
-            return prePayOrderDTO;
-        } finally {
-            // 释放分布式锁
-            redisLock.unlock(key);
+
+            // 提取业务参数
+            String orderId = prePayOrderRequest.getOrderId();
+            Integer payAmount = prePayOrderRequest.getPayAmount();
+
+            // 入参检查
+            checkPrePayOrderRequestParam(prePayOrderRequest, orderId, payAmount);
+
+            // 加分布式锁（与订单支付回调时加的是同一把锁）
+            String key = RedisLockKeyConstants.ORDER_PAY_KEY + orderId;
+            prePayOrderLock(key);
+            try {
+                // 幂等性检查
+                checkPrePayOrderInfo(orderId, payAmount);
+
+                // 调用支付系统进行预支付
+                PayOrderRequest payOrderRequest = orderConverter.convertPayOrderRequest(prePayOrderRequest);
+                PayOrderDTO payOrderDTO = payRemote.payOrder(payOrderRequest);
+
+                // 状态机流转 -> 更新支付信息
+                OrderStatusChangeEnum statusChangeEnum = OrderStatusChangeEnum.ORDER_PREPAY;
+                StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(statusChangeEnum.getFromStatus());
+                orderStateMachine.fire(statusChangeEnum, payOrderDTO);
+
+                // 返回结果
+                PrePayOrderDTO prePayOrderDTO = orderConverter.convertPrePayOrderRequest(payOrderDTO);
+                log.info(LoggerFormat.build()
+                        .remark("prePayOrder->response")
+                        .data("response", prePayOrderDTO)
+                        .finish());
+                return prePayOrderDTO;
+            } finally {
+                // 释放分布式锁
+                redisLock.unlock(key);
+            }
+
+        }finally {
+            hintManager.close();
         }
     }
 
@@ -269,10 +259,21 @@ public class OrderServiceImpl implements OrderService {
                 .data("request", payCallbackRequest)
                 .finish());
 
-        // 状态机流转
-        OrderStatusChangeEnum event = OrderStatusChangeEnum.ORDER_PAID;
-        StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(event.getFromStatus());
-        orderStateMachine.fire(event, payCallbackRequest);
+        HintManager hintManager = HintManager.getInstance();
+        try {
+            
+            // 订单支付回调流程事务既有写，也有读，并且是读操作在前，
+            // 强制所有的查询从主库查询
+            hintManager.setMasterRouteOnly();
+
+            // 状态机流转
+            OrderStatusChangeEnum event = OrderStatusChangeEnum.ORDER_PAID;
+            StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(event.getFromStatus());
+            orderStateMachine.fire(event, payCallbackRequest);
+
+        }finally {
+            hintManager.close();
+        }
     }
 
 
@@ -292,8 +293,7 @@ public class OrderServiceImpl implements OrderService {
         });
 
         //3、对订单进行软删除
-        List<Long> ids = orders.stream().map(OrderInfoDO::getId).collect(Collectors.toList());
-        orderInfoDAO.softRemoveOrders(ids);
+        orderInfoDAO.softRemoveOrders(orderIds);
     }
 
     private boolean canRemove(OrderInfoDO order) {
@@ -324,7 +324,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         //5、更新配送地址信息
-        orderDeliveryDetailDAO.updateDeliveryAddress(orderDeliveryDetail.getId()
+        orderDeliveryDetailDAO.updateDeliveryAddress(orderDeliveryDetail.getOrderId()
                 , orderDeliveryDetail.getModifyAddressCount(), request);
     }
 }

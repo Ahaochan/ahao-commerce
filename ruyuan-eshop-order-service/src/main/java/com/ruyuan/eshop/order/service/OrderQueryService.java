@@ -31,23 +31,12 @@ public interface OrderQueryService {
     PagingInfo<OrderListDTO> executeListQueryV1(OrderQuery query);
 
     /**
-     *
-     *
-     *
-     * @param query
-     * @param queryDataTypes
-     * @return
-     */
-    /**
      * 执行列表查询 v2
-     * toC : es+mysql
-     * toB : es+es
      *
-     * @param query          入参
-     * @param downgrade      false : es+mysql; true:es+es
+     *  @param query          入参
      * @param queryDataTypes 查询项
      */
-    PagingInfo<OrderDetailDTO> executeListQueryV2(OrderQuery query, Boolean downgrade,
+    PagingInfo<OrderDetailDTO> executeListQueryV2(OrderQuery query,
                                                   OrderQueryDataTypeEnums... queryDataTypes) throws Exception;
 
 

@@ -36,7 +36,9 @@ public class SubOrderCreateAction extends OrderStateAction<SubOrderCreateRequest
         subOrderCreateProcess.start();
 
         // 流程执行完之后，获取返回参数
-        return subOrderCreateProcess.get("orderInfoDTO");
+        OrderInfoDTO orderInfoDTO = subOrderCreateProcess.get("orderInfoDTO");
+        log.info("SubOrderCreated->subOrderId={},parentOrderId={}",orderInfoDTO.getOrderId(),orderInfoDTO.getParentOrderId());
+        return orderInfoDTO;
     }
 
     @Override

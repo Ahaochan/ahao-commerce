@@ -46,8 +46,6 @@ public abstract class OrderStateAction<T> extends AbstractStateAction<T, OrderIn
         }
         if (event.isSendEvent()) {
             // 发送订单标准状态变更消息
-            // 这里其实是有基于消息总线，message bus，把订单所有的状态变更作为一个消息都推送出去到mq里去
-            // 订单他自己，或者是其他的系统，但凡是关注订单事件变更的，都可以去关注topic，通用型的消息总线的效果
             rocketMqService.sendStandardOrderStatusChangeMessage(new SendOrderStdEventDTO(event, context.getOrderId()));
         }
     }

@@ -54,4 +54,8 @@ public class FullOrderData {
      */
     private List<OrderSnapshotDO> orderSnapshotDOList;
 
+    /**
+     * 用于mock数据
+     */
+    private List<OrderOperateLogDO> testOrderOperateLogDOs;
 }

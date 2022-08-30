@@ -1,13 +1,17 @@
 package com.ruyuan.eshop.order.statemachine.action.order.create.node;
 
+import cn.hutool.json.JSONUtil;
 import com.ruyuan.eshop.common.enums.AmountTypeEnum;
 import com.ruyuan.eshop.common.enums.OrderStatusEnum;
 import com.ruyuan.eshop.common.utils.JsonUtil;
 import com.ruyuan.eshop.order.builder.FullOrderData;
 import com.ruyuan.eshop.order.converter.OrderConverter;
+import com.ruyuan.eshop.order.dao.OrderSnapshotDAO;
+import com.ruyuan.eshop.order.dao.OrderSnapshotDAOUtils;
 import com.ruyuan.eshop.order.domain.entity.*;
 import com.ruyuan.eshop.order.enums.OrderNoTypeEnum;
 import com.ruyuan.eshop.order.enums.SnapshotTypeEnum;
+import com.ruyuan.eshop.order.hbase.entity.OrderInfoExtJsonDTO;
 import com.ruyuan.eshop.order.manager.OrderNoManager;
 import com.ruyuan.eshop.order.service.impl.NewOrderDataHolder;
 import com.ruyuan.eshop.order.utils.OrderTypeUtils;
@@ -53,6 +57,7 @@ public class OrderCreateSubBuilderNode extends StandardProcessor {
 
         processContext.set("fullMasterOrderData", fullMasterOrderData);
         processContext.set("newOrderDataHolder", newOrderDataHolder);
+        processContext.set("fullSubOrderData", fullSubOrderData);
     }
 
     /**
@@ -230,7 +235,14 @@ public class OrderCreateSubBuilderNode extends StandardProcessor {
             subOrderSnapshotDO.setGmtModified(currentDate);
             subOrderSnapshotDOList.add(subOrderSnapshotDO);
         }
+
+        // 预分配主单快照在HBASE中的rowKey前缀
+        OrderInfoExtJsonDTO orderInfoExtJsonDTO = new OrderInfoExtJsonDTO();
+        orderInfoExtJsonDTO.setOrderSnapshotRowKeyPrefixList(OrderSnapshotDAOUtils.batchGenerateRowKey(subOrderSnapshotDOList.size()));
+        newSubOrderInfo.setExtJson(JSONUtil.toJsonStr(orderInfoExtJsonDTO));
+
         subFullOrderData.setOrderSnapshotDOList(subOrderSnapshotDOList);
+        subFullOrderData.setOrderInfoDO(newSubOrderInfo);
         return subFullOrderData;
     }
 

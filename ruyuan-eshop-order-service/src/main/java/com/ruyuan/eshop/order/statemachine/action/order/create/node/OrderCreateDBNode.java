@@ -1,11 +1,13 @@
 package com.ruyuan.eshop.order.statemachine.action.order.create.node;
 
+import cn.hutool.json.JSONUtil;
 import com.ruyuan.eshop.common.utils.LoggerFormat;
 import com.ruyuan.eshop.order.builder.FullOrderData;
 import com.ruyuan.eshop.order.converter.OrderConverter;
 import com.ruyuan.eshop.order.dao.*;
 import com.ruyuan.eshop.order.domain.dto.OrderInfoDTO;
 import com.ruyuan.eshop.order.domain.entity.*;
+import com.ruyuan.eshop.order.hbase.entity.OrderInfoExtJsonDTO;
 import com.ruyuan.eshop.order.service.impl.NewOrderDataHolder;
 import com.ruyuan.process.engine.process.ProcessContext;
 import com.ruyuan.process.engine.process.StandardProcessor;
@@ -69,6 +71,18 @@ public class OrderCreateDBNode extends StandardProcessor {
         transactionTemplate.execute(transactionStatus -> {
             FullOrderData fullOrderData = processContext.get("fullMasterOrderData");
             NewOrderDataHolder newOrderDataHolder = processContext.get("newOrderDataHolder");
+            FullOrderData fullSubOrderData = processContext.get("fullSubOrderData");
+
+            // 获取主单或者子单
+            boolean isSubOrderCreate = fullSubOrderData != null;
+            OrderInfoDO order = null;
+            if(!isSubOrderCreate) {
+                order = fullOrderData.getOrderInfoDO();
+            }
+            else {
+                order = fullSubOrderData.getOrderInfoDO();
+            }
+
             String orderId = fullOrderData.getOrderInfoDO().getOrderId();
             // 订单信息
             List<OrderInfoDO> orderInfoDOList = newOrderDataHolder.getOrderInfoDOList();
@@ -142,31 +156,33 @@ public class OrderCreateDBNode extends StandardProcessor {
                 orderCancelScheduledTaskDAO.saveOne(orderInfoDO.getOrderId(), orderInfoDO.getExpireTime());
             }
 
-            OrderInfoDTO orderInfoDTO = orderConverter.orderInfoDO2DTO(fullOrderData.getOrderInfoDO());
+            OrderInfoDTO orderInfoDTO = orderConverter.orderInfoDO2DTO(order);
             processContext.set("orderInfoDTO", orderInfoDTO);
 
             // 事务提交成功后执行
+            OrderInfoDO finalOrder = order;
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
                   @Override
                   public void afterCommit() {
-                      // 订单状态变更日志信息
-                      List<OrderOperateLogDO> orderOperateLogDOList = newOrderDataHolder.getOrderOperateLogDOList();
-                      if (!orderOperateLogDOList.isEmpty()) {
-                          log.info(LoggerFormat.build()
-                                  .remark("保存订单状态变更日志信息")
-                                  .data("orderId", orderId)
-                                  .finish());
-                          orderOperateLogDAO.batchSave(orderOperateLogDOList);
-                      }
-                      // 订单快照数据
-                      List<OrderSnapshotDO> orderSnapshotDOList = newOrderDataHolder.getOrderSnapshotDOList();
-                      if (!orderSnapshotDOList.isEmpty()) {
-                          log.info(LoggerFormat.build()
-                                  .remark("保存订单快照数据")
-                                  .data("orderId", orderId)
-                                  .finish());
-                          orderSnapshotDAO.batchSave(orderSnapshotDOList);
-                      }
+                  // 订单状态变更日志信息
+                  List<OrderOperateLogDO> orderOperateLogDOList = newOrderDataHolder.getOrderOperateLogDOList();
+                  if (!orderOperateLogDOList.isEmpty()) {
+                      log.info(LoggerFormat.build()
+                              .remark("保存订单状态变更日志信息")
+                              .data("orderId", orderId)
+                              .finish());
+                      orderOperateLogDAO.batchSave(orderOperateLogDOList);
+                  }
+                  // 订单快照数据
+                  List<OrderSnapshotDO> orderSnapshotDOList = newOrderDataHolder.getOrderSnapshotDOList();
+                  if (!orderSnapshotDOList.isEmpty()) {
+                      log.info(LoggerFormat.build()
+                              .remark("保存订单快照数据")
+                              .data("orderId", orderId)
+                              .finish());
+
+                      orderSnapshotDAO.batchSave(orderSnapshotDOList, OrderSnapshotDAOUtils.getRowKeyPrefixList(finalOrder));
+                  }
                   }
               }
             );

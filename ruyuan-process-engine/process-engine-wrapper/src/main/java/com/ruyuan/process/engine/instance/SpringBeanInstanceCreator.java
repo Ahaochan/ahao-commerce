@@ -17,7 +17,7 @@ public class SpringBeanInstanceCreator implements ProcessorInstanceCreator {
         Object bean;
         try {
             Class<?> clazz = Class.forName(className);
-            bean = SpringUtil.getBean(clazz);
+            bean = SpringContextUtil.getBean(clazz);
         } catch (BeansException e) {
             return ProcessContextFactory.DEFAULT_INSTANCE_CREATOR.newInstance(className, name);
         }

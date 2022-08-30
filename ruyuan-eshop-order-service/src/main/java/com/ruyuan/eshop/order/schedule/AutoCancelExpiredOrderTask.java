@@ -59,7 +59,6 @@ public class AutoCancelExpiredOrderTask {
         int totalShardNum = Optional.of(XxlJobHelper.getShardTotal()).orElse(0);
 
         //  查询所有任务表里的记录
-        // 在生单的时候，这个表里是插入了数据
         List<OrderCancelScheduledTaskDO> orderCancelScheduledTaskDOList = orderCancelScheduledTaskDAO.getUnPaidOrderRecord();
         List<String> orderIdList = orderCancelScheduledTaskDOList.stream()
                 .map(OrderCancelScheduledTaskDO::getOrderId).collect(Collectors.toList());

@@ -60,13 +60,13 @@ public class AfterSaleQueryApiImpl implements AfterSaleQueryApi {
     }
 
     @Override
-    public JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2(AfterSaleQuery query, Boolean downgrade) {
+    public JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2(AfterSaleQuery query) {
         try {
             //1、参数校验
             afterSaleQueryService.checkQueryParam(query);
 
             //2、查询
-            return JsonResult.buildSuccess(afterSaleQueryService.executeListQueryV2(query, downgrade, query.getQueryDataTypes()));
+            return JsonResult.buildSuccess(afterSaleQueryService.executeListQueryV2(query, query.getQueryDataTypes()));
 
         } catch (OrderBizException e) {
             log.error("biz error", e);

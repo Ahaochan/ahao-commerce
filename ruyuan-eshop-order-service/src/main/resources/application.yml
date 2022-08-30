@@ -303,7 +303,7 @@ dubbo:
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   mapper-locations: classpath:mapper/*.xml
 
@@ -348,6 +348,8 @@ elasticsearch:
   shards-number: 3
   replicas-number: 2
   return-size: 10000
+  search-result-size: 20
+
 hbase:
   config:
     hbase:

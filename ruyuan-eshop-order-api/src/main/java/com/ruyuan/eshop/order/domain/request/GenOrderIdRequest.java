@@ -15,7 +15,6 @@ public class GenOrderIdRequest implements Serializable {
 
     /**
      * 业务线标识
-     * 目前仅仅支持一种业务标识，就是自营商城，B2C，大B端，直接对c端出售商品
      */
     private Integer businessIdentifier;
 

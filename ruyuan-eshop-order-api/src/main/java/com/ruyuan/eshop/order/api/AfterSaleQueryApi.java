@@ -28,10 +28,9 @@ public interface AfterSaleQueryApi {
      * 查询售后列表v2
      *
      * @param query     入参
-     * @param downgrade false : es+mysql; true:es+es
      * @return
      */
-    JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2(AfterSaleQuery query, Boolean downgrade);
+    JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2(AfterSaleQuery query);
 
     /**
      * 查询售后单详情 v1

@@ -36,7 +36,7 @@ public class OrderDeliveredAction extends AbstractAfterFulfillResultAction {
     protected void doExecute(AfterFulfillDTO afterFulfillDTO, OrderInfoDO order) {
         // 增加订单配送表的配送员信息
         OrderDeliveryDetailDO deliveryDetail = orderDeliveryDetailDAO.getByOrderId(order.getOrderId());
-        orderDeliveryDetailDAO.updateDeliverer(deliveryDetail.getId()
+        orderDeliveryDetailDAO.updateDeliverer(deliveryDetail.getOrderId()
                 , afterFulfillDTO.getDelivererNo()
                 , afterFulfillDTO.getDelivererName(),
                 afterFulfillDTO.getDelivererPhone());

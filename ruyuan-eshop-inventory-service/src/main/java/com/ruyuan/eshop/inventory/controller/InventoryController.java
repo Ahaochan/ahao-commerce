@@ -69,7 +69,7 @@ public class InventoryController {
 
 
     /**
-     * 新增商品库存
+     * 扣减商品库存
      *
      * @return
      */

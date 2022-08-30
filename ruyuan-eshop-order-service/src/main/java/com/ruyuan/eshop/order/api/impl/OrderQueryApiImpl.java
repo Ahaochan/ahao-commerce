@@ -5,10 +5,12 @@ import com.ruyuan.eshop.common.page.PagingInfo;
 import com.ruyuan.eshop.common.utils.ParamCheckUtil;
 import com.ruyuan.eshop.order.api.OrderQueryApi;
 import com.ruyuan.eshop.order.converter.OrderConverter;
+import com.ruyuan.eshop.order.dao.OrderInfoDAO;
 import com.ruyuan.eshop.order.dao.OrderItemDAO;
 import com.ruyuan.eshop.order.domain.dto.OrderDetailDTO;
 import com.ruyuan.eshop.order.domain.dto.OrderItemDTO;
 import com.ruyuan.eshop.order.domain.dto.OrderListDTO;
+import com.ruyuan.eshop.order.domain.entity.OrderInfoDO;
 import com.ruyuan.eshop.order.domain.entity.OrderItemDO;
 import com.ruyuan.eshop.order.domain.query.OrderQuery;
 import com.ruyuan.eshop.order.domain.request.OrderDetailRequest;
@@ -41,6 +43,9 @@ public class OrderQueryApiImpl implements OrderQueryApi {
     @Autowired
     private OrderItemDAO orderItemDAO;
 
+    @Autowired
+    private OrderInfoDAO orderInfoDAO;
+
     /**
      * 查询订单列表
      */
@@ -63,13 +68,13 @@ public class OrderQueryApiImpl implements OrderQueryApi {
     }
 
     @Override
-    public JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2(OrderQuery query, Boolean downgrade) {
+    public JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2(OrderQuery query) {
         try {
             // 1、参数校验
             orderQueryService.checkQueryParam(query);
 
             // 2、查询
-            return JsonResult.buildSuccess(orderQueryService.executeListQueryV2(query, downgrade, query.getQueryDataTypes()));
+            return JsonResult.buildSuccess(orderQueryService.executeListQueryV2(query));
 
         } catch (OrderBizException e) {
             log.error("biz error", e);
@@ -130,5 +135,15 @@ public class OrderQueryApiImpl implements OrderQueryApi {
             orderItemDTOList.add(orderItemDTO);
         }
         return orderItemDTOList;
+    }
+
+    @Override
+    public String getOrderIdByUserId(String userId) {
+        List<OrderInfoDO> orderList = orderInfoDAO.getOrderListByUserId(userId);
+        if (orderList.isEmpty()) {
+            //  为保证压测流程能够进行下去,返回null时默认给一个数据表中的历史存量数据
+            return "1022012265376529110";
+        }
+        return orderList.get(0).getOrderId();
     }
 }

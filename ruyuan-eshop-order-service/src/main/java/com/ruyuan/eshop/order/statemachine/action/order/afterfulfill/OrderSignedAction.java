@@ -36,7 +36,7 @@ public class OrderSignedAction extends AbstractAfterFulfillResultAction {
     protected void doExecute(AfterFulfillDTO afterFulfillDTO, OrderInfoDO order) {
         //增加订单配送表的签收时间
         OrderDeliveryDetailDO deliveryDetail = orderDeliveryDetailDAO.getByOrderId(order.getOrderId());
-        orderDeliveryDetailDAO.updateSignedTime(deliveryDetail.getId(), afterFulfillDTO.getSignedTime());
+        orderDeliveryDetailDAO.updateSignedTime(deliveryDetail.getOrderId(), afterFulfillDTO.getSignedTime());
     }
 
 }

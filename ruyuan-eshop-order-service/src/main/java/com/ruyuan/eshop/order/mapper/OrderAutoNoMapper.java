@@ -25,8 +25,6 @@ public interface OrderAutoNoMapper extends BaseMapper<OrderAutoNoDO> {
     /**
      * bizTag查询
      *
-     * 查到我的这个事务视图里，可以看到的max_id和step，当前这条数据
-     *
      * @param bizTag 业务标识
      * @return 返回
      */

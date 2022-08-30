@@ -42,6 +42,6 @@ public class CoreConstant {
     /**
      * 默认等待锁时间
      */
-    public static final Integer DEFAULT_WAIT_SECONDS = 3;
+    public static final Integer DEFAULT_WAIT_SECONDS = 4;
 
 }

@@ -8,6 +8,7 @@ import com.ruyuan.eshop.common.enums.OrderStatusEnum;
 import com.ruyuan.eshop.common.enums.OrderTypeEnum;
 import com.ruyuan.eshop.common.page.PagingInfo;
 import com.ruyuan.eshop.common.tuple.Pair;
+import com.ruyuan.eshop.common.utils.DateFormatUtil;
 import com.ruyuan.eshop.common.utils.LoggerFormat;
 import com.ruyuan.eshop.common.utils.ParamCheckUtil;
 import com.ruyuan.eshop.order.constants.OrderQueryFiledNameConstant;
@@ -135,12 +136,11 @@ public class OrderQueryServiceImpl implements OrderQueryService {
     }
 
     @Override
-    public PagingInfo<OrderDetailDTO> executeListQueryV2(OrderQuery query, Boolean downgrade
-            , OrderQueryDataTypeEnums... queryDataTypes) throws Exception {
+    public PagingInfo<OrderDetailDTO> executeListQueryV2(OrderQuery query,
+                                                         OrderQueryDataTypeEnums... queryDataTypes) throws Exception {
 
         log.info(LoggerFormat.build()
                 .remark("order:executeListQuery_v2->request")
-                .data("downgrade", downgrade)
                 .finish());
 
         //1、组装业务查询规则
@@ -151,10 +151,9 @@ public class OrderQueryServiceImpl implements OrderQueryService {
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-        // 构建条件查询
-        BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(query);
+        // 构建全匹配查询
+        BoolQueryBuilder boolQueryBuilder = buildMatchAllBoolQueryBuilder();
         searchSourceBuilder.query(boolQueryBuilder);
-        // 如果要进行分页，一般来说都必须进行排序
 
         // 设置排序
         setSort(searchSourceBuilder, query);
@@ -168,7 +167,6 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         log.info(LoggerFormat.build()
                 .remark("order:executeListQuery_v2->es->response")
                 .data("esResponseDTO", esResponseDTO)
-                .data("downgrade", downgrade)
                 .finish());
         Long total = esResponseDTO.getTotal();
 
@@ -177,7 +175,7 @@ public class OrderQueryServiceImpl implements OrderQueryService {
             List<OrderListQueryIndex> queryIndices = esResponseDTO.getData().toJavaList(OrderListQueryIndex.class);
             // 从数据库/es查询订单详情DTO
             queryIndices.forEach(index -> {
-                orderDetailDTOs.add(buildOrderDetail(index.getOrderId(), downgrade, queryDataTypes));
+                orderDetailDTOs.add(buildOrderDetail(index.getOrderId()));
             });
         }
 
@@ -218,7 +216,7 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         List<OrderOperateLogDO> orderOperateLogs = orderOperateLogDAO.listByOrderId(orderId);
 
         //8、查询订单快照
-        List<OrderSnapshotDO> orderSnapshots = orderSnapshotDAO.queryOrderSnapshotByOrderId(orderId);
+        List<OrderSnapshotDO> orderSnapshots = orderSnapshotDAO.queryOrderSnapshotByOrderId(orderId, OrderSnapshotDAOUtils.getRowKeyPrefixList(orderInfo));
 
         //9、查询缺品退款信息
         List<OrderLackItemDTO> lackItems = null;
@@ -250,30 +248,26 @@ public class OrderQueryServiceImpl implements OrderQueryService {
                 .finish());
         try {
             // 构建订单详情DTO
-            return buildOrderDetail(request.getOrderId(), false, request.getQueryDataTypes());
+            return buildOrderDetail(request.getOrderId(), request.getQueryDataTypes());
         } catch (Exception e) {
             log.error("查询订单详情异常，err={}", e);
             log.info("进行降级，查询es");
-            return buildOrderDetail(request.getOrderId(), true, request.getQueryDataTypes());
+            return buildOrderDetail(request.getOrderId(), request.getQueryDataTypes());
         }
     }
 
     /**
      * 构建订单详情DTO
-     *
-     * @param orderId        订单id
-     * @param downgrade      降级开关
+     *  @param orderId        订单id
      * @param queryDataTypes 查询项
      */
-    private OrderDetailDTO buildOrderDetail(String orderId, boolean downgrade, OrderQueryDataTypeEnums... queryDataTypes) {
+    private OrderDetailDTO buildOrderDetail(String orderId, OrderQueryDataTypeEnums... queryDataTypes) {
         if (Objects.isNull(queryDataTypes) || queryDataTypes.length == 0) {
             queryDataTypes = new OrderQueryDataTypeEnums[]{OrderQueryDataTypeEnums.ORDER};
         }
         OrderDetailBuilder orderDetailBuilder =
                 springApplicationContext.getBean(OrderDetailBuilder.class);
-        if (downgrade) {
-            orderDetailBuilder.setDowngrade();
-        }
+
         for (OrderQueryDataTypeEnums dataType : queryDataTypes) {
             orderDetailBuilder.buildOrderInfo(dataType, orderId)
                     .buildOrderItems(dataType, orderId)
@@ -321,6 +315,7 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         if (Objects.nonNull(query.getBusinessIdentifier())) {
             boolQueryBuilder.must(QueryBuilders.termQuery(OrderQueryFiledNameConstant.BUSINESS_IDENTIFIER, query.getBusinessIdentifier()));
         }
+
         if (CollectionUtils.isNotEmpty(query.getOrderIds())) {
             boolQueryBuilder.must(QueryBuilders.termsQuery(OrderQueryFiledNameConstant.ORDER_ID, query.getOrderIds()));
         }
@@ -360,12 +355,16 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         if (Objects.nonNull(query.getCreatedTimeInterval())) {
             Pair<Date, Date> createdTimeInterval = query.getCreatedTimeInterval();
             boolQueryBuilder.must(QueryBuilders.rangeQuery(OrderQueryFiledNameConstant.CREATED_TIME)
-                    .gte(createdTimeInterval.getLeft()).lte(createdTimeInterval.getRight()));
+                    .gte(DateFormatUtil.formatDateTime(createdTimeInterval.getLeft()))
+                    .lte(DateFormatUtil.formatDateTime(createdTimeInterval.getRight()))
+            );
         }
         if (Objects.nonNull(query.getPayTimeInterval())) {
             Pair<Date, Date> payTimeInterval = query.getPayTimeInterval();
             boolQueryBuilder.must(QueryBuilders.rangeQuery(OrderQueryFiledNameConstant.PAY_TIME)
-                    .gte(payTimeInterval.getLeft()).lte(payTimeInterval.getRight()));
+                    .gte(DateFormatUtil.formatDateTime(payTimeInterval.getLeft()))
+                    .lte(DateFormatUtil.formatDateTime(payTimeInterval.getRight()))
+            );
         }
         if (Objects.nonNull(query.getPayAmountInterval())) {
             Pair<Integer, Integer> payAmountInterval = query.getPayAmountInterval();
@@ -374,6 +373,18 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         }
 
         return boolQueryBuilder;
+    }
+
+    /**
+     * 构建订单列表查询es 全匹配查询
+     * 可与 buildBoolQueryBuilder 交替调用，通过对比查看 全匹配查询 和 精准匹配查询 之间的区别
+     * <p>
+     * 调用精准匹配： BoolQueryBuilder boolQueryBuilder = buildBoolQueryBuilder(query);
+     * 调用全匹配： BoolQueryBuilder boolQueryBuilder = buildMatchAllBoolQueryBuilder();
+     */
+    private BoolQueryBuilder buildMatchAllBoolQueryBuilder() {
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        return boolQueryBuilder.filter(QueryBuilders.matchAllQuery());
     }
 
     private void checkIntAllowableValues(Integer i, Set<Integer> allowableValues, String paramName) {

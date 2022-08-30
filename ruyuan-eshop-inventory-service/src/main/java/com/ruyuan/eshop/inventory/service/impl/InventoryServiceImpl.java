@@ -65,16 +65,13 @@ public class InventoryServiceImpl implements InventoryService {
 
     /**
      * 扣减商品库存
-     * seata事务，tcc事务，都取消掉了，saga事务
-     * 全部都是用业务流程编排引擎替换，业务流程执行失败，自动补偿和回滚
-     * 补偿和回滚失败了，跑到一半儿突然宕机了，业务流程编排引擎会支持定时扫描业务流程运行状态
-     * 如果没跑完，就自动进行回滚和补偿就可以了，重量级分布式事务全部都替换掉了
      *
      * @param deductProductStockRequest
      * @return
      */
     @Override
     public Boolean deductProductStock(DeductProductStockRequest deductProductStockRequest) {
+
         log.info(LoggerFormat.build()
                 .remark("deductProductStock->request")
                 .data("request", deductProductStockRequest)
@@ -87,24 +84,20 @@ public class InventoryServiceImpl implements InventoryService {
                 deductProductStockRequest.getOrderItemRequestList();
 
         // 按照skuCode进行排序，防止出现死锁的情况
-        // 锁库存的时候，必须做一些操作，分布式锁避免说有一个并发锁库存，导致库存锁定出问题的情况
-        // 一次性要锁多个库存，万一锁库存操作请求，重复发送了多次，商品list排序是不同的
-        // 锁住了商品A，另外一个请求锁住了商品B -> 锁商品B，另外一个线程锁商品A -> 死锁问题
         orderItemRequestList = orderItemRequestList.stream()
                 .sorted(Comparator.comparing(DeductProductStockRequest.OrderItemRequest::getSkuCode)).collect(Collectors.toList());
 
         for (DeductProductStockRequest.OrderItemRequest orderItemRequest : orderItemRequestList) {
             String skuCode = orderItemRequest.getSkuCode();
             String lockKey = RedisLockKeyConstants.DEDUCT_PRODUCT_STOCK_KEY + skuCode;
+            boolean locked = false;
             try {
                 // 1、添加redis锁扣库存锁
                 // (1)防同一笔订单重复扣减
                 // (2)重量级锁，保证mysql+redis扣库存的原子性，同一时间只能有一个订单来扣，
                 // 需要锁查询+扣库存
                 // 获取不到锁，阻塞等待
-
-                // 不会说无限制的加锁等待，如果说要是加锁时间过长，3秒钟都没拿到锁，就直接释放掉
-                boolean locked = redisLock.tryLock(lockKey, CoreConstant.DEFAULT_WAIT_SECONDS);
+                locked = redisLock.tryLock(lockKey, CoreConstant.DEFAULT_WAIT_SECONDS);
                 if (!locked) {
                     log.error(LoggerFormat.build()
                             .remark("无法获取扣减库存锁")
@@ -141,7 +134,9 @@ public class InventoryServiceImpl implements InventoryService {
                 DeductStockDTO deductStock = new DeductStockDTO(orderId, skuCode, saleQuantity, productStockDO);
                 deductProductStockProcessor.doDeduct(deductStock);
             } finally {
-                redisLock.unlock(lockKey);
+                if(locked) {
+                    redisLock.unlock(lockKey);
+                }
             }
         }
         log.info(LoggerFormat.build()
@@ -198,16 +193,10 @@ public class InventoryServiceImpl implements InventoryService {
 
                 Integer saleQuantity = orderItemRequest.getSaleQuantity();
 
-                // 避免空回滚
-                // 回滚的时候，一定要检查一下，之前的正向操作成功了没
-                // 此时他的条件判断，仅仅能避免，对一个库存进行重复的释放，库存日志存在，也释放过了
-                // 还有另外一个情况，库存操作日志根本就不存在，库存扣减根本就没成功
-
                 //3、校验是否释放过库存
-                // 你之前根本就没锁过库存，此时就根本不能去释放库存
                 ProductStockLogDO productStockLog = productStockLogDAO.getLog(orderId, skuCode);
-                if (productStockLog == null) {
-                    log.info("空回滚，库存根本就没扣减过,orderId={},skuCode={}", orderId, skuCode);
+                if(null == productStockDO) {
+                    log.info("未扣减过库存，无需释放库存,orderId={},skuCode={}", orderId, skuCode);
                     return true;
                 }
                 if (null != productStockLog && productStockLog.getStatus().equals(StockLogStatusEnum.RELEASED.getCode())) {
@@ -219,7 +208,9 @@ public class InventoryServiceImpl implements InventoryService {
                 releaseProductStockProcessor.doRelease(orderId, skuCode, saleQuantity, productStockLog);
 
             } finally {
-                redisLock.unlock(lockKey);
+                if(locked) {
+                    redisLock.unlock(lockKey);
+                }
             }
         }
         return true;

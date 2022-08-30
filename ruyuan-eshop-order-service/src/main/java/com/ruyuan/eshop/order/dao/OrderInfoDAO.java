@@ -4,11 +4,11 @@ package com.ruyuan.eshop.order.dao;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ruyuan.eshop.common.dao.BaseDAO;
 import com.ruyuan.eshop.common.enums.DeleteStatusEnum;
-import com.ruyuan.eshop.common.enums.OrderStatusEnum;
 import com.ruyuan.eshop.order.domain.dto.OrderExtJsonDTO;
 import com.ruyuan.eshop.order.domain.dto.OrderListDTO;
 import com.ruyuan.eshop.order.domain.dto.OrderListQueryDTO;
@@ -36,7 +36,7 @@ public class OrderInfoDAO extends BaseDAO<OrderInfoMapper, OrderInfoDO> {
     private OrderInfoMapper orderInfoMapper;
 
     /**
-     * 根据订单号查询订单
+     * 根据订单号查询订单号
      */
     public List<OrderInfoDO> listByOrderIds(List<String> orderIds) {
         LambdaQueryWrapper<OrderInfoDO> queryWrapper = new LambdaQueryWrapper<>();
@@ -47,12 +47,12 @@ public class OrderInfoDAO extends BaseDAO<OrderInfoMapper, OrderInfoDO> {
     /**
      * 软删除订单
      *
-     * @param ids 订单主键id
+     * @param orderIds 订单Ids
      */
-    public void softRemoveOrders(List<Long> ids) {
+    public void softRemoveOrders(List<String> orderIds) {
         LambdaUpdateWrapper<OrderInfoDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.set(OrderInfoDO::getDeleteStatus, DeleteStatusEnum.YES.getCode())
-                .in(OrderInfoDO::getId, ids);
+                .in(OrderInfoDO::getOrderId, orderIds);
         this.update(updateWrapper);
     }
 
@@ -62,7 +62,11 @@ public class OrderInfoDAO extends BaseDAO<OrderInfoMapper, OrderInfoDO> {
     public OrderInfoDO getByOrderId(String orderId) {
         LambdaQueryWrapper<OrderInfoDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderInfoDO::getOrderId, orderId);
-        return getOne(queryWrapper);
+        List<OrderInfoDO> list = list(queryWrapper);
+        if(CollectionUtils.isNotEmpty(list)) {
+            return list.get(0);
+        }
+        return null;
     }
 
     /**
@@ -76,7 +80,19 @@ public class OrderInfoDAO extends BaseDAO<OrderInfoMapper, OrderInfoDO> {
 
 
     /**
-     * 根据订单号更新订单
+     * 根据订单号或者父单号更新订单
+     */
+    public boolean updateByOrderIdOrParentId(OrderInfoDO orderInfoDO, String orderId) {
+        LambdaUpdateWrapper<OrderInfoDO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(OrderInfoDO::getOrderId, orderId)
+                .or()
+                .eq(OrderInfoDO::getParentOrderId, orderId);
+        return update(orderInfoDO, updateWrapper);
+    }
+
+
+    /**
+     * 根据父订单号更新订单
      */
     public boolean updateBatchByOrderIds(OrderInfoDO orderInfoDO, List<String> orderIds) {
         LambdaUpdateWrapper<OrderInfoDO> updateWrapper = new LambdaUpdateWrapper<>();
@@ -133,14 +149,6 @@ public class OrderInfoDAO extends BaseDAO<OrderInfoMapper, OrderInfoDO> {
         return update(updateWrapper);
     }
 
-    /**
-     * 扫描所有未支付订单
-     */
-    public List<OrderInfoDO> listAllUnPaid() {
-        LambdaQueryWrapper<OrderInfoDO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(OrderInfoDO::getOrderStatus, OrderStatusEnum.unPaidStatus());
-        return list(queryWrapper);
-    }
 
     /**
      * 根据orderId查询全部主单和子单
@@ -155,15 +163,24 @@ public class OrderInfoDAO extends BaseDAO<OrderInfoMapper, OrderInfoDO> {
 
     /**
      * 分页查询订单
-     *
+     * <p>
      * 仅适用于单库单表，且主键id连续的情况，解决深分页的问题
      *
      * @param offset 偏移量，从0开始
-     * @param limit limit
+     * @param limit  limit
      * @return 结果
      */
     public List<OrderInfoDO> getPageBy(long offset, long limit) {
         return new LambdaQueryChainWrapper<>(orderInfoMapper)
-                .ge(OrderInfoDO::getId, offset+1).le(OrderInfoDO::getId, offset+limit).list();
+                .ge(OrderInfoDO::getId, offset + 1).le(OrderInfoDO::getId, offset + limit).list();
+    }
+
+    /**
+     * 根据userId查询order list
+     */
+    public List<OrderInfoDO> getOrderListByUserId(String userId) {
+        LambdaQueryWrapper<OrderInfoDO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderInfoDO::getUserId, userId);
+        return list(queryWrapper);
     }
 }

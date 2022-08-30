@@ -1,5 +1,6 @@
 package com.ruyuan.eshop.order.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.IndexDirection;
@@ -18,7 +19,7 @@ import java.util.Date;
  * @author zhonghuashishan
  */
 @Data
-@Document("order_operate_log") // 我们要把写入mongodb的数据打上一些注解标注
+@TableName("order_operate_log")
 public class OrderOperateLogDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -26,17 +27,21 @@ public class OrderOperateLogDO implements Serializable {
     /**
      * 主键ID
      */
+    @TableId(value = "id", type = IdType.AUTO)
     @Id
     @Indexed
     private String id;
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     @Field(value = "gmt_create")
     private Date gmtCreate;
+
     /**
      * 更新时间
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     @Field(value = "gmt_modified")
     private Date gmtModified;
     /**

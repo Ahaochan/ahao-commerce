@@ -7,15 +7,12 @@ import com.ruyuan.eshop.order.dao.OrderInfoDAO;
 import com.ruyuan.eshop.order.domain.dto.CheckOrderStatusConsistencyResultDTO;
 import com.ruyuan.eshop.order.domain.entity.OrderInfoDO;
 import com.ruyuan.eshop.order.elasticsearch.EsClientService;
-import com.ruyuan.eshop.order.elasticsearch.entity.EsOrderInfo;
 import com.ruyuan.eshop.order.elasticsearch.enums.EsIndexNameEnum;
 import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderListQueryIndexHandler;
 import com.ruyuan.eshop.order.elasticsearch.query.OrderListQueryIndex;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -52,17 +49,6 @@ public class EsClientServiceTest {
         System.out.println("result=" + result);
     }
 
-    @Test
-    public void index() throws Exception {
-        String orderId = "1022011279374601100";
-        OrderInfoDO orderInfoDO = orderInfoDAO.getByOrderId(orderId);
-        EsOrderInfo esOrderInfo = esEntityConverter.convertToEsOrderInfo(orderInfoDO);
-        esClientService.index(esOrderInfo);
-
-        String result = esClientService.queryById(EsIndexNameEnum.ORDER_INFO, orderId);
-
-        System.out.println("result =" + JSONObject.toJSONString(result));
-    }
 
     @Test
     public void test() throws Exception {
@@ -112,47 +98,5 @@ public class EsClientServiceTest {
         orderInfoDOList.add(orderInfo2);
 //        orderInfoDOList.add(orderInfo3);
         return orderInfoDOList;
-    }
-
-
-    @Test
-    public void bulk() throws Exception {
-
-        String id1 = "1022011454136064100";
-        String id2 = "1022011466522368100";
-        String map1 = esClientService.queryById(EsIndexNameEnum.ORDER_INFO,id1);
-        String map2 = esClientService.queryById(EsIndexNameEnum.ORDER_INFO,id2);
-
-        BulkRequest bulkRequest = new BulkRequest();
-
-
-        IndexRequest indexRequest1 = new IndexRequest(EsIndexNameEnum.ORDER_INFO.getName());
-        indexRequest1.id(id1);
-        JSONObject jsonObject1 = JSONObject.parseObject(map1);
-        jsonObject1.put("extJson","extJson1");
-        indexRequest1.source(jsonObject1.toJSONString(), XContentType.JSON);
-        indexRequest1.version(3);
-        indexRequest1.versionType(VersionType.EXTERNAL);
-
-        bulkRequest.add(indexRequest1);
-
-        IndexRequest indexRequest2 = new IndexRequest(EsIndexNameEnum.ORDER_INFO.getName());
-        indexRequest2.id(id2);
-        JSONObject jsonObject2 = JSONObject.parseObject(map2);
-        jsonObject1.put("extJson","extJson2");
-        indexRequest2.source(jsonObject2.toJSONString(), XContentType.JSON);
-        indexRequest2.version(7);
-        indexRequest2.versionType(VersionType.EXTERNAL);
-
-        bulkRequest.add(indexRequest2);
-
-
-        BulkResponse response = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-
-
-
-        System.out.println(JSONObject.toJSONString(response));
-        System.out.println(response.hasFailures());
-        System.out.println(response.buildFailureMessage());
     }
 }

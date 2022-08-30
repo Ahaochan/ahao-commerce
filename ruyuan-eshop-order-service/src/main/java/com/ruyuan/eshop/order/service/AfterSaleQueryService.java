@@ -33,13 +33,12 @@ public interface AfterSaleQueryService {
     PagingInfo<AfterSaleOrderListDTO> executeListQueryV1(AfterSaleQuery query);
 
     /**
-     * 执行列表查询 v2 toC
+     * 执行列表查询 v2
      *
      * @param query     入参
-     * @param downgrade false : es+mysql; true:es+es
      * @return
      */
-    PagingInfo<AfterSaleOrderDetailDTO> executeListQueryV2(AfterSaleQuery query, Boolean downgrade, AfterSaleQueryDataTypeEnums... queryDataTypes) throws Exception;
+    PagingInfo<AfterSaleOrderDetailDTO> executeListQueryV2(AfterSaleQuery query, AfterSaleQueryDataTypeEnums... queryDataTypes) throws Exception;
 
     /**
      * 查询售后单详情 v1

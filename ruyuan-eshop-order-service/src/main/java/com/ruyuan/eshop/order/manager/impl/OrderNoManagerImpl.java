@@ -42,8 +42,6 @@ public class OrderNoManagerImpl implements OrderNoManager {
      * 获取订单ID
      */
     private String getOrderIdKey(Integer orderNoType, String userId) {
-        // 他其实是一个字符串的拼接，这块订单号生成，其实一直都没太大的变化
-        // 订单号的生成，yymmdd年月日 + 序列号 + 用户id后三位，订单号里可以反映出来，时间，当天第几个订单，哪个用户来生成的
         return getDateTimeKey() + getAutoNoKey(orderNoType) + getUserIdKey(userId);
     }
 
@@ -58,10 +56,6 @@ public class OrderNoManagerImpl implements OrderNoManager {
      * 生成订单号中间的8位序列号
      */
     private String getAutoNoKey(Integer orderNoType) {
-        // 基于数据库的内存双缓冲发号，全局唯一的序号发号
-        // 对于这个序号，我们是不能直接拼接在字符串，订单号是对外暴露出去的
-        // 导致一个问题，订单号是全局增长的，竞对通过订单号，就可以猜出来你历史上一共有多少订单，泄漏商业机密
-        // 混淆加密，数字序号，long，混淆，转换为一个其他的唯一的数字
         Long autoNo = segmentIDGen.genNewNo(orderNoType.toString());
         return String.valueOf(NumberUtil.genNo(autoNo, 8));
     }

@@ -36,7 +36,7 @@ public class OrderOutStockedAction extends AbstractAfterFulfillResultAction {
     protected void doExecute(AfterFulfillDTO afterFulfillDTO, OrderInfoDO order) {
         // 增加订单配送表的出库时间
         OrderDeliveryDetailDO deliveryDetail = orderDeliveryDetailDAO.getByOrderId(order.getOrderId());
-        orderDeliveryDetailDAO.updateOutStockTime(deliveryDetail.getId(), afterFulfillDTO.getOutStockTime());
+        orderDeliveryDetailDAO.updateOutStockTime(deliveryDetail.getOrderId(), afterFulfillDTO.getOutStockTime());
     }
 
 }

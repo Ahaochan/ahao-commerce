@@ -120,8 +120,8 @@ public class OrderCancelAction extends OrderStateAction<CancelOrderRequest> {
             cancelOrderFulfillmentAndUpdateOrderStatus(cancelOrderAssembleRequest);
 
             //  向下游发送释放权益资产MQ
-            // 拦截履约和其他的操作都成功了以后，直接发送MQ就可以了，确保MQ一定会发送成功
             sendReleaseAssetsMq(cancelOrderAssembleRequest);
+
         } catch (Exception e) {
             throw new OrderBizException(e.getMessage());
         } finally {

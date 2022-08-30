@@ -35,11 +35,6 @@ public class OrderDetailBuilder {
 
     private boolean allNull = true;
 
-    /**
-     * 降级开关
-     */
-    private boolean downgrade = false;
-
     @Autowired
     private OrderInfoDAO orderInfoDAO;
 
@@ -72,9 +67,6 @@ public class OrderDetailBuilder {
     @Autowired
     private OrderSnapshotDAO orderSnapshotDAO;
 
-    @Autowired
-    private EsOrderService esOrderService;
-
     /**
      * 订单操作日志存储的DAO组件
      */
@@ -84,13 +76,8 @@ public class OrderDetailBuilder {
     public OrderDetailBuilder buildOrderInfo(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.ORDER.equals(dataType)) {
             // 查询订单
+            OrderInfoDO orderInfo = orderInfoDAO.getByOrderId(orderId);
 
-            OrderInfoDO orderInfo = null;
-            if (!downgrade) {
-                orderInfo = orderInfoDAO.getByOrderId(orderId);
-            } else {
-                orderInfo = esOrderService.getOrderInfo(orderId);
-            }
             if (isNull(orderInfo)) {
                 return this;
             }
@@ -106,12 +93,7 @@ public class OrderDetailBuilder {
     public OrderDetailBuilder buildOrderItems(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.ORDER_ITEM.equals(dataType)) {
             // 查询订单条目
-            List<OrderItemDO> orderItems = null;
-            if (!downgrade) {
-                orderItems = orderItemDAO.listByOrderId(orderId);
-            } else {
-                orderItems = esOrderService.listOrderItems(orderId);
-            }
+            List<OrderItemDO> orderItems = orderItemDAO.listByOrderId(orderId);
             if (isEmpty(orderItems)) {
                 return this;
             }
@@ -123,12 +105,7 @@ public class OrderDetailBuilder {
     public OrderDetailBuilder buildOrderAmountDetails(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.ORDER_AMOUNT_DETAIL.equals(dataType)) {
             // 查询订单费用明细
-            List<OrderAmountDetailDO> orderAmountDetails = null;
-            if (!downgrade) {
-                orderAmountDetails = orderAmountDetailDAO.listByOrderId(orderId);
-            } else {
-                orderAmountDetails = esOrderService.listOrderAmountDetails(orderId);
-            }
+            List<OrderAmountDetailDO> orderAmountDetails = orderAmountDetailDAO.listByOrderId(orderId);
             if (isEmpty(orderAmountDetails)) {
                 return this;
             }
@@ -141,12 +118,8 @@ public class OrderDetailBuilder {
     public OrderDetailBuilder buildOrderDeliveryDetail(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.DELIVERY.equals(dataType)) {
             // 查询订单配送信息
-            OrderDeliveryDetailDO orderDeliveryDetail = null;
-            if (!downgrade) {
-                orderDeliveryDetail = orderDeliveryDetailDAO.getByOrderId(orderId);
-            } else {
-                orderDeliveryDetail = esOrderService.getOrderDeliveryDetail(orderId);
-            }
+            OrderDeliveryDetailDO orderDeliveryDetail = orderDeliveryDetailDAO.getByOrderId(orderId);
+
             if (isNull(orderDeliveryDetail)) {
                 return this;
             }
@@ -159,12 +132,8 @@ public class OrderDetailBuilder {
     public OrderDetailBuilder buildOrderPaymentDetails(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.PAYMENT.equals(dataType)) {
             // 查询订单支付明细
-            List<OrderPaymentDetailDO> orderPaymentDetails = null;
-            if (!downgrade) {
-                orderPaymentDetails = orderPaymentDetailDAO.listByOrderId(orderId);
-            } else {
-                orderPaymentDetails = esOrderService.listOrderPaymentDetails(orderId);
-            }
+            List<OrderPaymentDetailDO> orderPaymentDetails = orderPaymentDetailDAO.listByOrderId(orderId);
+
             if (isEmpty(orderPaymentDetails)) {
                 return this;
             }
@@ -177,12 +146,7 @@ public class OrderDetailBuilder {
     public OrderDetailBuilder buildOrderAmounts(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.AMOUNT.equals(dataType)) {
             // 查询订单费用类型
-            List<OrderAmountDO> orderAmounts = null;
-            if (!downgrade) {
-                orderAmounts = orderAmountDAO.listByOrderId(orderId);
-            } else {
-                orderAmounts = esOrderService.listOrderAmounts(orderId);
-            }
+            List<OrderAmountDO> orderAmounts = orderAmountDAO.listByOrderId(orderId);
             if (isEmpty(orderAmounts)) {
                 return this;
             }
@@ -207,8 +171,9 @@ public class OrderDetailBuilder {
 
     public OrderDetailBuilder buildOrderSnapshots(OrderQueryDataTypeEnums dataType, String orderId) {
         if (OrderQueryDataTypeEnums.SNAPSHOT.equals(dataType)) {
+            OrderInfoDO orderInfoDO = orderInfoDAO.getByOrderId(orderId);
             // 查询订单快照
-            List<OrderSnapshotDO> orderSnapshots = orderSnapshotDAO.queryOrderSnapshotByOrderId(orderId);
+            List<OrderSnapshotDO> orderSnapshots = orderSnapshotDAO.queryOrderSnapshotByOrderId(orderId, OrderSnapshotDAOUtils.getRowKeyPrefixList(orderInfoDO));
             if (isEmpty(orderSnapshots)) {
                 return this;
             }
@@ -241,13 +206,6 @@ public class OrderDetailBuilder {
 
     public boolean allNull() {
         return allNull;
-    }
-
-    /**
-     * 设置降级，查询es
-     */
-    public void setDowngrade() {
-        downgrade = true;
     }
 
     private boolean isNull(Object obj) {

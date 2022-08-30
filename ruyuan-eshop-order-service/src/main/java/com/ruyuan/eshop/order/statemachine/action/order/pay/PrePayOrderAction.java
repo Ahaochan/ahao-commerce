@@ -35,8 +35,8 @@ public class PrePayOrderAction extends OrderStateAction<PayOrderDTO> {
     @Override
     protected OrderInfoDTO onStateChangeInternal(OrderStatusChangeEnum event, PayOrderDTO context) {
         // 更新订单表与支付信息表
-        // 当我们完成了预支付的操作之后，就是去更新订单和支付的数据表
         updateOrderPaymentInfo(context);
+
         // 返回null，不会发送标准订单变更消息
         return null;
     }
@@ -81,7 +81,6 @@ public class PrePayOrderAction extends OrderStateAction<PayOrderDTO> {
         if (orderIds == null) {
             return;
         }
-        // 完成预支付了以后，更新的是支付类型和支付时间
         OrderInfoDO orderInfoDO = new OrderInfoDO();
         orderInfoDO.setPayType(payType);
         orderInfoDO.setPayTime(payTime);
@@ -120,8 +119,6 @@ public class PrePayOrderAction extends OrderStateAction<PayOrderDTO> {
         if (subOrderIds == null || subOrderIds.isEmpty()) {
             return;
         }
-
-        // 子单的支付类型和支付时间，也会一起来进行更新操作
 
         // 更新子订单支付信息
         updateOrderInfo(subOrderIds, payType, payTime);

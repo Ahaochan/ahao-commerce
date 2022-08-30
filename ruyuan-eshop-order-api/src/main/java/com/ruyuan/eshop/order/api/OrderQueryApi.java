@@ -24,11 +24,10 @@ public interface OrderQueryApi {
 
     /**
      * 查询订单列表 v2
+     *  @param query      查询入参
      *
-     * @param query      查询入参
-     * @param downgrade: false : es+mysql; true:es+es
      */
-    JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2(OrderQuery query, Boolean downgrade);
+    JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2(OrderQuery query);
 
 
     /**
@@ -46,4 +45,8 @@ public interface OrderQueryApi {
      */
     List<OrderItemDTO> getOrderItemByOrderId(String orderId);
 
+    /**
+     * 根据用户id查询订单id
+     */
+    String getOrderIdByUserId(String userId);
 }

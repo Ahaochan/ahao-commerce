@@ -15,8 +15,6 @@ import java.util.Date;
 /**
  * 订单列表查询es index
  * 里面的属性来自于order_info,order_item,order_delivery_detail,order_payment_detail
- * 订单搜索索引，4表合一，直接打了一个大宽表，避免了多表join关联，根本不要去搞join
- * 是没有全文索引，按照一个一个字段的值，去进行搜索
  *
  * @author zhonghuashishan
  * @version 1.0
@@ -27,7 +25,7 @@ import java.util.Date;
 public class OrderListQueryIndex {
 
     /**
-     * 唯一id，ES里一条数据主键值
+     * 唯一id
      */
     @EsField(type = EsDataTypeEnum.KEYWORD)
     @EsId
@@ -49,8 +47,7 @@ public class OrderListQueryIndex {
     @EsField(type = EsDataTypeEnum.KEYWORD)
     private String orderId;
     /**
-     * 订单明细编号，面向搜索的索引，一条数据是订单条目这个粒度的
-     * 每个订单条目，都在这个ES索引里有一一条数据
+     * 订单明细编号
      */
     @EsField(type = EsDataTypeEnum.KEYWORD)
     private String orderItemId;

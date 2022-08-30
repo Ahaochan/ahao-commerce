@@ -27,10 +27,6 @@ public class CustomerReviewReturnGoodsRequest implements Serializable {
      */
     private Integer auditResult;
     /**
-     * 售后支付单id
-     */
-    private Long afterSaleRefundId;
-    /**
      * 订单id
      */
     private String orderId;

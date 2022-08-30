@@ -1,9 +1,11 @@
 package com.ruyuan.eshop.order.statemachine.action.order.create;
 
+import com.ruyuan.consistency.annotation.ConsistencyTask;
 import com.ruyuan.eshop.common.enums.OrderStatusChangeEnum;
 import com.ruyuan.eshop.common.enums.OrderStatusEnum;
 import com.ruyuan.eshop.order.builder.FullOrderData;
 import com.ruyuan.eshop.order.domain.dto.OrderInfoDTO;
+import com.ruyuan.eshop.order.domain.dto.SplitOrderDTO;
 import com.ruyuan.eshop.order.domain.request.CreateOrderRequest;
 import com.ruyuan.eshop.order.domain.request.SubOrderCreateRequest;
 import com.ruyuan.eshop.order.statemachine.StateMachineFactory;
@@ -37,11 +39,9 @@ public class OrderCreateAction extends OrderStateAction<CreateOrderRequest> {
         return OrderStatusChangeEnum.ORDER_CREATED;
     }
 
-    // 通过状态机context传递，fire事件触发的时候，传递进去context（生单请求）
     @Override
     protected OrderInfoDTO onStateChangeInternal(OrderStatusChangeEnum event, CreateOrderRequest context) {
         // 获取流程引擎并执行
-        // 又会在这里把这个request放到业务流程编排引擎context里去
         ProcessContext masterOrderCreateProcess = processContextFactory.getContext("masterOrderCreateProcess");
         masterOrderCreateProcess.set("createOrderRequest", context);
         masterOrderCreateProcess.start();
@@ -52,6 +52,7 @@ public class OrderCreateAction extends OrderStateAction<CreateOrderRequest> {
         OrderInfoDTO orderInfoDTO = masterOrderCreateProcess.get("orderInfoDTO");
         orderInfoDTO.setProductTypeSet(productTypeSet);
         orderInfoDTO.setFullOrderData(fullOrderData);
+        log.info("OrderCreated->orderId={}",orderInfoDTO.getOrderId());
         return orderInfoDTO;
     }
 
@@ -65,18 +66,21 @@ public class OrderCreateAction extends OrderStateAction<CreateOrderRequest> {
         if (productTypeSet.size() <= 1) {
             return;
         }
-
         // 存在多种商品类型，需要按商品类型进行拆单
         for (Integer productType : productTypeSet) {
-            // 通过状态机来生成子订单
-            StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(OrderStatusEnum.NULL);
-            orderStateMachine.fire(OrderStatusChangeEnum.SUB_ORDER_CREATED,
-                    new SubOrderCreateRequest(fullOrderData, productType));
+            doSplitOrderAction(new SplitOrderDTO(productType, fullOrderData));
         }
     }
 
-    // 我们一定要去避免和处理这种问题，对每一种商品类型的拆单，触发这个流程之前，是否把这个流程，包裹再我们最终一致性的框架里去
-    // 对拆单子流程触发，包裹在最终一致性框架里，在拆单子流程运行之前，先去写一条最终一致性框架的持久化任务，写到db里去，触发拆单子流程，子流程运行失败了以后
-    // 我们的最终一致性框架，就可以确保说会不断的去进行重试，直到拆单子流程可以运行成功为止
+    /**
+     * 触发拆单状态机
+     */
+    @ConsistencyTask(id = "doSplitOrder", alertActionBeanName = "tendConsistencyAlerter")
+    public void doSplitOrderAction(SplitOrderDTO splitOrderDTO) {
+        // 通过状态机来生成子订单
+        StateMachineFactory.OrderStateMachine orderStateMachine = stateMachineFactory.getOrderStateMachine(OrderStatusEnum.NULL);
+        orderStateMachine.fire(OrderStatusChangeEnum.SUB_ORDER_CREATED,
+                new SubOrderCreateRequest(splitOrderDTO.getFullOrderData(), splitOrderDTO.getProductType()));
+    }
 
 }

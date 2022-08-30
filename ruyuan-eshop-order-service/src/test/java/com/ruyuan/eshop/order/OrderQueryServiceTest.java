@@ -180,7 +180,7 @@ public class OrderQueryServiceTest {
         OrderQuery query = new OrderQuery();
         query.setBusinessIdentifier(1);
 
-        PagingInfo<OrderDetailDTO> result = orderQueryService.executeListQueryV2(query, false);
+        PagingInfo<OrderDetailDTO> result = orderQueryService.executeListQueryV2(query);
 
         System.out.println(JSONObject.toJSONString(result));
     }

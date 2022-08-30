@@ -26,9 +26,11 @@
             <charset>utf8</charset>
         </encoder>
     </appender>
-    <logger name="com.ruyuan.eshop" level="info"/>
+    <logger name="com.ruyuan.eshop" level="error"/>
+    <logger name="com.ruyuan.consistency" level="error"/>
+    <logger name="org.apache.shardingsphere" level="error"/>
     <root level="INFO">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
         <appender-ref ref="ROLLING"/>
     </root>
 </configuration>

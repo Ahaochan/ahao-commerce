@@ -216,7 +216,9 @@ public class FulfillServiceImpl implements FulfillService {
         String key = RedisLockKeyConstants.FULFILL_KEY + orderId;
         boolean lock = redisLock.tryLock(key);
         if (!lock) {
-            throw new FulfillBizException(FulfillErrorCodeEnum.ORDER_FULFILL_ERROR);
+            log.error("履约锁加锁失败，lock={},orderId={}", lock,orderId);
+            return true;
+            //throw new FulfillBizException(FulfillErrorCodeEnum.ORDER_FULFILL_ERROR);
         }
 
         try {
@@ -242,7 +244,9 @@ public class FulfillServiceImpl implements FulfillService {
                     });
             return true;
         } finally {
-            redisLock.unlock(key);
+            if(lock) {
+                redisLock.unlock(key);
+            }
         }
     }
 

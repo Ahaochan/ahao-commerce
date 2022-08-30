@@ -82,7 +82,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
             Integer payStatus = orderPaymentDetailDO.getPayStatus();
 
             // 幂等性检查
-            // 如果说你在进行支付的时候，订单处于一些特殊的状态，也需要做一些处理
             if (!OrderStatusEnum.CREATED.getCode().equals(orderStatus)) {
                 // 异常场景处理
                 payCallbackFailure(orderStatus, payStatus, payType, orderPaymentDetailDO, orderInfoDO);
@@ -90,7 +89,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
             }
 
             // 设置支付时间
-            // 如果说确实一次正常的支付回调，就需要去设置支付时间
             orderInfoDO.setPayTime(context.getPayTime());
 
             // 执行正式的订单支付回调处理
@@ -191,9 +189,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
             List<OrderInfoDO> subOrders = orderInfoDAO.listByParentOrderId(orderId);
 
             // 2、判断是否存在子订单
-            // 如果说没有出现拆单的话，此时就去更新订单支付状态
-            // 如果要是说出现了拆单的问题的话，此时的话，不是这个流程了
-            // 一旦拆单了以后，支付回调以后，对主单就不会去进行更新操作了，生单的时候，主单会被更新为invalid状态
             if (!hasChild(subOrders)) {
                 // 执行主单已支付的逻辑
                 doMasterOrderPaid(order, orderId);
@@ -305,7 +300,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
                                             Integer payType) {
         // 此时如果订单的支付状态是未支付的话
         // 说明用户在取消订单的时候，支付系统还没有完成回调，而支付系统又已经扣了用户的钱，所以要调用一下退款
-        // 订单已经取消，而且之前确实没支付过，对于本次第三方支付发起退款
         if (PayStatusEnum.UNPAID.getCode().equals(payStatus)) {
             // 调用退款
             executeOrderRefund(orderInfoDO, orderPaymentDetailDO);
@@ -315,7 +309,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
         // 此时如果订单的支付状态是已支付的话
         // 说明用户在取消订单的时候，订单已经不是"已创建"状态了
         if (PayStatusEnum.PAID.getCode().equals(payStatus)) {
-            // 之前的一次支付和本次的支付，是一样的支付类型，之前的那次支付发起了重复的回调，抛异常就可以了
             if (payType.equals(orderPaymentDetailDO.getPayType())) {
                 // 非"已创建"状态订单的取消操作本身就会进行退款的
                 // 所以如果是同种支付方式，说明用户并没有进行多次支付，是不需要调用退款接口
@@ -323,7 +316,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
             } else {
                 // 而非同种支付方式的话，说明用户还是更换了不同支付方式进行了多次扣款，所以需要调用一下退款接口
                 // 调用退款
-                // 你之前支付过，也取消了，但是你换了一种支付方式再次支付了，发起退款
                 executeOrderRefund(orderInfoDO, orderPaymentDetailDO);
                 throw new OrderBizException(OrderErrorCodeEnum.ORDER_CANCEL_PAY_CALLBACK_PAY_TYPE_NO_SAME_ERROR);
             }
@@ -337,7 +329,6 @@ public class OrderPayCallbackAction extends OrderStateAction<PayCallbackRequest>
                                            OrderPaymentDetailDO orderPaymentDetailDO,
                                            Integer payStatus,
                                            Integer payType) {
-        // 这种情况，你之前支付过了，发起履约了，出库，配送，状态了
         if (PayStatusEnum.PAID.getCode().equals(payStatus)) {
             // 如果是同种支付方式回调，说明用户是并没有发起重复付款的，只是支付系统多触发了一次回调
             // 这里做好冥等判断，直接return即可，不需要调用退款接口

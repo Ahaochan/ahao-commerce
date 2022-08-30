@@ -92,10 +92,9 @@ public class EsAfterSaleListQueryIndexHandler extends EsAbstractHandler {
      */
     public void sycToEs(List<AfterSaleListQueryIndex> afterSaleListQueryIndices, long timestamp) throws Exception {
         log.info("同步AfterSaleListQueryIndex到es , afterSaleListQueryIndices={}, timestamp={}", JSONObject.toJSONString(afterSaleListQueryIndices), timestamp);
-        if(timestamp<=-1) {
+        if (timestamp <= -1) {
             esClientService.bulkIndex(afterSaleListQueryIndices);
-        }
-        else {
+        } else {
             esClientService.bulkIndexWithVersionControl(afterSaleListQueryIndices, timestamp);
         }
 
@@ -123,8 +122,11 @@ public class EsAfterSaleListQueryIndexHandler extends EsAbstractHandler {
             try {
                 // 查询售后单
                 List<AfterSaleInfoDO> afterSales = afterSaleInfoDAO.listByAfterSaleIds(afterSaleIds);
+                if (CollectionUtils.isEmpty(afterSales)) {
+                    return;
+                }
 
-                buildAndSynToEs(afterSales, afterSaleIds,timestamp);
+                buildAndSynToEs(afterSales, afterSaleIds, timestamp);
             } catch (Exception e) {
                 log.error("同步AfterSaleListQueryIndex到es异常，err={}", e.getMessage(), e);
             }
@@ -174,8 +176,8 @@ public class EsAfterSaleListQueryIndexHandler extends EsAbstractHandler {
                 .createdTime(afterSale.getGmtCreate())
                 .applyTime(afterSale.getApplyTime())
                 .reviewTime(afterSale.getReviewTime());
-        if(null != afterSaleRefund) {
-        builder .refundPayTime(afterSaleRefund.getRefundPayTime())
+        if (null != afterSaleRefund) {
+            builder.refundPayTime(afterSaleRefund.getRefundPayTime())
                     .refundAmount(afterSaleRefund.getRefundAmount());
         }
 
@@ -186,7 +188,7 @@ public class EsAfterSaleListQueryIndexHandler extends EsAbstractHandler {
      * 再和after_sale_item进行内连接，after_sale_info*after_sale_refund和after_sale_item是1:N
      */
     private List<AfterSaleListQueryIndex> andInnerJoinWithAfterSaleItem(AfterSaleListQueryIndex originQueryIndex, List<AfterSaleItemDO> afterSaleItems) {
-        if(CollectionUtils.isEmpty(afterSaleItems)) {
+        if (CollectionUtils.isEmpty(afterSaleItems)) {
             return Lists.newArrayList(originQueryIndex);
         }
 

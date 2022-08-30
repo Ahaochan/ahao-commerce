@@ -22,6 +22,7 @@ import com.ruyuan.eshop.order.domain.query.OrderQuery;
 import com.ruyuan.eshop.order.domain.request.*;
 import com.ruyuan.eshop.order.mq.producer.DefaultProducer;
 import com.ruyuan.eshop.order.service.impl.OrderFulFillServiceImpl;
+import com.ruyuan.eshop.order.test.PrepareOrderFullDataUtilsTest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,20 @@ public class OrderTestController {
 
     @Autowired
     private OrderInfoDAO orderInfoDAO;
+
+    @Autowired
+    private PrepareOrderFullDataUtilsTest prepareOrderFullDataUtilsTest;
+
+    @Value("${canal.binlog.consumer.enable}")
+    private Boolean enable;
+
+    /**
+     *
+     */
+    @GetMapping("/canal/isEnable")
+    public JsonResult<Boolean> isEnable() {
+        return JsonResult.buildSuccess(enable);
+    }
 
     /**
      * 测试生成新的订单号
@@ -124,22 +139,12 @@ public class OrderTestController {
     }
 
     /**
-     * 订单列表查询 v2 toC
+     * 订单列表查询 v2
      */
-    @PostMapping("/v2/toC/listOrders")
-    public JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2toC(@RequestBody OrderQuery query) {
-        return queryApi.listOrdersV2(query, false);
+    @PostMapping("/v2/listOrders")
+    public JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2(@RequestBody OrderQuery query) {
+        return queryApi.listOrdersV2(query);
     }
-
-    /**
-     * 订单列表查询 v2 toB
-     * 针对M端的全量订单查询，userid这个条件别指定就可以了
-     */
-    @PostMapping("/v2/toB/listOrders")
-    public JsonResult<PagingInfo<OrderDetailDTO>> listOrdersV2ToB(@RequestBody OrderQuery query) {
-        return queryApi.listOrdersV2(query, true);
-    }
-
     /**
      * 订单详情 v1
      */
@@ -212,5 +217,23 @@ public class OrderTestController {
     public JsonResult<List<OrderFulfillDTO>> listOrderFulfills(@RequestParam("orderId") String orderId) {
         log.info("orderId={}", orderId);
         return  fulfillApi.listOrderFulfills(orderId);
+    }
+
+//    /**
+//     * 批量生成订单数据
+//     */
+//    @GetMapping("/batchInsertOrder")
+//    public JsonResult<Boolean> batchInsertOrder() {
+//        prepareOrderFullDataUtilsTest.batchInsertOrder();
+//        return JsonResult.buildSuccess(true);
+//    }
+
+    /**
+     * 查询订单号,提供给压测订单详情使用
+     */
+    @GetMapping("/findOrderId")
+    public JsonResult<String> findOrderId(@RequestParam("userId") String userId) {
+        String orderId = queryApi.getOrderIdByUserId(userId);
+        return JsonResult.buildSuccess(orderId);
     }
 }

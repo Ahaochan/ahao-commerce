@@ -89,18 +89,17 @@ public class EsOrderListQueryIndexHandler extends EsAbstractHandler {
      * 同步到es
      */
     public void sycToEs(List<OrderListQueryIndex> orderListQueryIndices) throws Exception {
-        sycToEs(orderListQueryIndices,-1);
+        sycToEs(orderListQueryIndices, -1);
     }
 
     /**
      * 同步到es
      */
     public void sycToEs(List<OrderListQueryIndex> orderListQueryIndices, long timestamp) throws Exception {
-        log.info("同步OrderListQueryIndex到es , orderListQueryIndices={},timestamp={}", JSONObject.toJSONString(orderListQueryIndices),timestamp);
-        if(timestamp<=-1) {
+        log.info("同步OrderListQueryIndex到es , orderListQueryIndices={},timestamp={}", JSONObject.toJSONString(orderListQueryIndices), timestamp);
+        if (timestamp <= -1) {
             esClientService.bulkIndex(orderListQueryIndices);
-        }
-        else {
+        } else {
             esClientService.bulkIndexWithVersionControl(orderListQueryIndices, timestamp);
         }
     }
@@ -127,6 +126,9 @@ public class EsOrderListQueryIndexHandler extends EsAbstractHandler {
             try {
                 // 查询订单条目
                 List<OrderInfoDO> orders = orderInfoDAO.listByOrderIds(orderIds);
+                if (CollectionUtils.isEmpty(orders)) {
+                    return;
+                }
 
                 buildAndSynToEs(orders, orderIds, timestamp);
             } catch (Exception e) {
@@ -187,7 +189,7 @@ public class EsOrderListQueryIndexHandler extends EsAbstractHandler {
                 .sellerId(order.getSellerId())
                 .payAmount(order.getPayAmount())
                 .userId(order.getUserId());
-        if(null != deliveryDetail) {
+        if (null != deliveryDetail) {
             builder.receiverName(deliveryDetail.getReceiverName())
                     .receiverPhone(deliveryDetail.getReceiverPhone());
         }
@@ -199,7 +201,7 @@ public class EsOrderListQueryIndexHandler extends EsAbstractHandler {
      * 再和order_item进行内连接，order_info*order_delivery_detail和order_item是1:N
      */
     private List<OrderListQueryIndex> andInnerJoinWithOrderItem(OrderListQueryIndex originQueryIndex, List<OrderItemDO> orderItems) {
-        if(CollectionUtils.isEmpty(orderItems)) {
+        if (CollectionUtils.isEmpty(orderItems)) {
             return Lists.newArrayList(originQueryIndex);
         }
 
@@ -225,7 +227,7 @@ public class EsOrderListQueryIndexHandler extends EsAbstractHandler {
      */
     private List<OrderListQueryIndex> andInnerJoinWithOrderPaymentDetail(List<OrderListQueryIndex> queryIndices, List<OrderPaymentDetailDO> orderPaymentDetails) {
 
-        if(CollectionUtils.isEmpty(orderPaymentDetails)) {
+        if (CollectionUtils.isEmpty(orderPaymentDetails)) {
             return queryIndices;
         }
 

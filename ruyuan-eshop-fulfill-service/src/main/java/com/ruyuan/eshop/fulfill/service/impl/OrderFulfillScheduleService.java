@@ -57,9 +57,6 @@ public class OrderFulfillScheduleService {
      */
     public void doSchedule(OrderFulfillDO orderFulfill, List<OrderFulfillItemDO> orderFulfillItems) {
 
-        // 履约不是我们的重点，注意这一点，我们主要是来做一个触发，都是进行各个环节的mock
-        // mock触发仓储打包出库，触发物流配送，签收
-
         // 1、调用wms的接口进行捡货出库
         PickDTO pickResult = wmsRemote.pickGoods(buildPickGoodsRequest(orderFulfill, orderFulfillItems));
         log.info("捡货结果，result={}", JSONObject.toJSONString(pickResult));

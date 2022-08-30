@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.ruyuan.eshop.common.constants.RocketMqConstant;
 import com.ruyuan.eshop.order.constants.BinlogTableConstant;
 import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderDeliveryDetailUpdateHandler;
-import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderFullDataAddHandler;
+import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderInfoInsertHandler;
 import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderPaymentDetailUpdateHandler;
 import com.ruyuan.eshop.order.elasticsearch.handler.order.EsOrderUpdateHandler;
 import com.ruyuan.eshop.order.mq.consumer.AbstractRocketMqListener;
@@ -59,7 +59,7 @@ public class OrderInfoBinlogConsumer extends AbstractRocketMqListener {
     private Boolean enable;
 
     @Autowired
-    private EsOrderFullDataAddHandler esOrderFullDataAddHandler;
+    private EsOrderInfoInsertHandler esOrderInfoInsertHandler;
 
     @Autowired
     private EsOrderUpdateHandler esOrderUpdateHandler;
@@ -80,12 +80,12 @@ public class OrderInfoBinlogConsumer extends AbstractRocketMqListener {
     @SneakyThrows
     @Override
     public void onMessage(String msg) {
-        log.info("enable={}，canal order forward 接收到消息 -> {}", enable,msg);
-
         if(!enable) {
-            log.info("binlog消费未启用！！");
+            // log.info("binlog消费未启用！！");
             return;
         }
+        log.info("enable={}，canal order forward 接收到消息 -> {}", enable,msg);
+
 
         JSONObject jsonObject = JSONObject.parseObject(msg);
         String table = jsonObject.getString(TABLE);
@@ -123,7 +123,7 @@ public class OrderInfoBinlogConsumer extends AbstractRocketMqListener {
 
         if (StringUtils.equals(INSERT, type)) {
             // 处理订单新增binlog日志
-            esOrderFullDataAddHandler.sync(orderIds,timestamp);
+            esOrderInfoInsertHandler.sync(orderIds,timestamp);
         } else if (StringUtils.equals(UPDATE, type)) {
             // 处理订单更新binlog日志
             esOrderUpdateHandler.sync(orderIds,timestamp);

@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ruyuan.eshop.common.constants.RocketMqConstant;
 import com.ruyuan.eshop.order.constants.BinlogTableConstant;
-import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleFullDataAddHandler;
+import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleInsertHandler;
 import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleItemUpdateHandler;
 import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleRefundUpdateHandler;
 import com.ruyuan.eshop.order.elasticsearch.handler.aftersale.EsAfterSaleUpdateHandler;
@@ -56,7 +56,7 @@ public class ReverseOrderInfoBinlogConsumer implements RocketMQListener<String> 
     public static final String AFTER_SALE_ID = "after_sale_id";
 
     @Autowired
-    private EsAfterSaleFullDataAddHandler esAfterSaleFullDataAddHandler;
+    private EsAfterSaleInsertHandler esAfterSaleInsertHandler;
 
     @Autowired
     private EsAfterSaleUpdateHandler esAfterSaleUpdateHandler;
@@ -80,12 +80,14 @@ public class ReverseOrderInfoBinlogConsumer implements RocketMQListener<String> 
     @SneakyThrows
     @Override
     public void onMessage(String msg) {
-        log.info("enable={}，canal order reverse 接收到消息 -> {}", enable,msg);
-
         if(!enable) {
-            log.info("binlog消费未启用！！");
+            // log.info("binlog消费未启用！！");
             return;
         }
+
+        log.info("enable={}，canal order reverse 接收到消息 -> {}", enable,msg);
+
+
 
         JSONObject jsonObject = JSONObject.parseObject(msg);
         String table = jsonObject.getString(TABLE);
@@ -122,7 +124,7 @@ public class ReverseOrderInfoBinlogConsumer implements RocketMQListener<String> 
 
         if (StringUtils.equals(INSERT, type)) {
             // 处理订单新增binlog日志
-            esAfterSaleFullDataAddHandler.sync(afterSaleIds, timestamp);
+            esAfterSaleInsertHandler.sync(afterSaleIds, timestamp);
         } else if (StringUtils.equals(UPDATE, type)) {
             // 处理订单更新binlog日志
             esAfterSaleUpdateHandler.sync(afterSaleIds, timestamp);

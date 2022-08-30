@@ -2,6 +2,7 @@ package com.ruyuan.eshop.order.dao;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.ruyuan.eshop.common.dao.BaseDAO;
 import com.ruyuan.eshop.order.domain.entity.OrderDeliveryDetailDO;
@@ -32,7 +33,11 @@ public class OrderDeliveryDetailDAO extends BaseDAO<OrderDeliveryDetailMapper, O
     public OrderDeliveryDetailDO getByOrderId(String orderId) {
         LambdaQueryWrapper<OrderDeliveryDetailDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderDeliveryDetailDO::getOrderId, orderId);
-        return baseMapper.selectOne(queryWrapper);
+        List<OrderDeliveryDetailDO> list = list(queryWrapper);
+        if(CollectionUtils.isNotEmpty(list)) {
+            return list.get(0);
+        }
+        return null;
     }
 
     /**
@@ -52,7 +57,7 @@ public class OrderDeliveryDetailDAO extends BaseDAO<OrderDeliveryDetailMapper, O
      *
      * @param request
      */
-    public boolean updateDeliveryAddress(Long id, Integer modifyAddressCount, AdjustDeliveryAddressRequest request) {
+    public boolean updateDeliveryAddress(String orderId, Integer modifyAddressCount, AdjustDeliveryAddressRequest request) {
         LambdaUpdateWrapper<OrderDeliveryDetailDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper
                 .set(StringUtils.isNotBlank(request.getProvince()), OrderDeliveryDetailDO::getProvince, request.getProvince())
@@ -63,38 +68,38 @@ public class OrderDeliveryDetailDAO extends BaseDAO<OrderDeliveryDetailMapper, O
                 .set(Objects.nonNull(request.getLat()), OrderDeliveryDetailDO::getLat, request.getLat())
                 .set(Objects.nonNull(request.getLon()), OrderDeliveryDetailDO::getLon, request.getLon())
                 .set(OrderDeliveryDetailDO::getModifyAddressCount, modifyAddressCount + 1)
-                .eq(OrderDeliveryDetailDO::getId, id);
+                .eq(OrderDeliveryDetailDO::getOrderId, orderId);
         return update(updateWrapper);
     }
 
     /**
      * 更新出库时间
      *
-     * @param id
+     * @param orderId
      * @param outStockTime
      * @return
      */
-    public boolean updateOutStockTime(Long id, Date outStockTime) {
+    public boolean updateOutStockTime(String orderId, Date outStockTime) {
         LambdaUpdateWrapper<OrderDeliveryDetailDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper
                 .set(OrderDeliveryDetailDO::getOutStockTime, outStockTime)
-                .eq(OrderDeliveryDetailDO::getId, id);
+                .eq(OrderDeliveryDetailDO::getOrderId, orderId);
         return update(updateWrapper);
     }
 
     /**
      * 更新配送员信息
      *
-     * @param id
+     * @param orderId
      * @return
      */
-    public boolean updateDeliverer(Long id, String delivererNo, String delivererName, String delivererPhone) {
+    public boolean updateDeliverer(String orderId, String delivererNo, String delivererName, String delivererPhone) {
         LambdaUpdateWrapper<OrderDeliveryDetailDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper
                 .set(OrderDeliveryDetailDO::getDelivererNo, delivererNo)
                 .set(OrderDeliveryDetailDO::getDelivererName, delivererName)
                 .set(OrderDeliveryDetailDO::getDelivererPhone, delivererPhone)
-                .eq(OrderDeliveryDetailDO::getId, id);
+                .eq(OrderDeliveryDetailDO::getOrderId, orderId);
         return update(updateWrapper);
     }
 
@@ -102,15 +107,15 @@ public class OrderDeliveryDetailDAO extends BaseDAO<OrderDeliveryDetailMapper, O
     /**
      * 更新签收时间
      *
-     * @param id
+     * @param orderId
      * @param signedTime
      * @return
      */
-    public boolean updateSignedTime(Long id, Date signedTime) {
+    public boolean updateSignedTime(String orderId, Date signedTime) {
         LambdaUpdateWrapper<OrderDeliveryDetailDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper
                 .set(OrderDeliveryDetailDO::getSignedTime, signedTime)
-                .eq(OrderDeliveryDetailDO::getId, id);
+                .eq(OrderDeliveryDetailDO::getOrderId, orderId);
         return update(updateWrapper);
     }
 

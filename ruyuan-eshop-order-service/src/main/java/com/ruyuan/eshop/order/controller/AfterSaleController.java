@@ -76,19 +76,11 @@ public class AfterSaleController {
     }
 
     /**
-     * 查询售后列表 v2 toC
+     * 查询售后列表 v2
      */
-    @PostMapping("/v2/toC/listAfterSales")
-    public JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2ToC(@RequestBody AfterSaleQuery query) {
-        return afterSaleQueryApi.listAfterSalesV2(query, false);
-    }
-
-    /**
-     * 查询售后列表 v2 toB
-     */
-    @PostMapping("/v2/toB/listAfterSales")
-    public JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2ToB(@RequestBody AfterSaleQuery query) {
-        return afterSaleQueryApi.listAfterSalesV2(query, true);
+    @PostMapping("/v2/listAfterSales")
+    public JsonResult<PagingInfo<AfterSaleOrderDetailDTO>> listAfterSalesV2(@RequestBody AfterSaleQuery query) {
+        return afterSaleQueryApi.listAfterSalesV2(query);
     }
 
     /**

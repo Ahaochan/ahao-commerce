@@ -15,6 +15,7 @@ public enum BusinessIdentifierEnum {
 
     SELF_MALL(1, "自营商城"),
     TEST(2, "测试"),
+    PRESSURE(3, "压测"),
     ;
 
     private Integer code;

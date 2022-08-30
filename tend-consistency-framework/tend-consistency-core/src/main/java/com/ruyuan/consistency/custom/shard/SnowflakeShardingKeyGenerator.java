@@ -70,10 +70,10 @@ public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator
     @Override
     public synchronized long generateShardKey() {
         long currentMilliseconds = timeService.getCurrentMillis();
-        if (waitTolerateTimeDifferenceIfNeed(currentMilliseconds)) { // snowflake算法，时钟回拨的问题
+        if (waitTolerateTimeDifferenceIfNeed(currentMilliseconds)) {
             currentMilliseconds = timeService.getCurrentMillis();
         }
-        if (lastMilliseconds == currentMilliseconds) { // 对同一个时间戳，需要对他的sequence的序号进行累加就可以了
+        if (lastMilliseconds == currentMilliseconds) {
             if (0L == (sequence = (sequence + 1) & SEQUENCE_MASK)) {
                 currentMilliseconds = waitUntilNextTime(currentMilliseconds);
             }
@@ -87,8 +87,6 @@ public final class SnowflakeShardingKeyGenerator implements ShardingKeyGenerator
 
     @SneakyThrows
     private boolean waitTolerateTimeDifferenceIfNeed(final long currentMilliseconds) {
-        // 上一次生成key的时间，比当前时间是要大的，出现了，时钟回拨问题，时钟往回拨
-        // 一旦说时钟回拨了以后，此时不能采纳当前的这个时间戳，必然会导致机器id，时间戳可能有重复，序号也可能有重复
         if (lastMilliseconds <= currentMilliseconds) {
             return false;
         }

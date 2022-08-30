@@ -4,7 +4,7 @@ spring:
   shardingsphere:
     props:
       sql:
-        show: true
+        show: false
     # 数据源配置
     datasource:
       names: ds0,ds1,ds2,ds3,ds4,ds5,ds6,ds7
@@ -159,6 +159,18 @@ spring:
             complex:
               sharding-columns: order_id,user_id,after_sale_id,parent_order_id
               algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTableComplexKeysShardingAlgorithm
+        order_operate_log:
+          actual-data-nodes: ds$->{0..7}.order_operate_log_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: order_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
+        order_snapshot:
+          actual-data-nodes: ds$->{0..7}.order_snapshot_$->{0..63}
+          table-strategy:
+            standard:
+              sharding-column: order_id
+              precise-algorithm-class-name: com.ruyuan.eshop.order.config.sharding.CustomTablePreciseShardingAlgorithm
         # 逆向售后业务表
         after_sale_info:
           actual-data-nodes: ds$->{0..7}.after_sale_info_$->{0..63}
@@ -200,6 +212,7 @@ spring:
       binding-tables:
         - order_info,order_item,order_payment_detail,order_delivery_detail
         - after_sale_info,after_sale_item,after_sale_refund
+
   cloud:
     nacos:
       discovery:
@@ -265,6 +278,11 @@ spring:
     timeout: 3000
     database: 0
 
+  data:
+    mongodb:
+      database: order_operate_log
+      uri: mongodb://order:order@192.168.0.222:27017,192.168.0.222:27018,192.168.0.222:27019/order_operate_log?slaveOk=true&write=1&readPreference=secondaryPreferred&connectTimeoutMS=30000&replicaSet=ruyuan_rs
+
 server:
   port: 8005
 
@@ -286,7 +304,7 @@ dubbo:
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   mapper-locations: classpath:mapper/*.xml
 
@@ -331,6 +349,7 @@ elasticsearch:
   shards-number: 3
   replicas-number: 2
   return-size: 10000
+  search-result-size: 20
 
 management:
   health:
@@ -341,7 +360,10 @@ hbase:
   config:
     hbase:
       zookeeper:
-        quorum: 192.168.0.222:2181
+        quorum: 172.19.16.48:2181
+      client:
+        username: root
+        password: hbase123!@#
 
 canal:
   binlog:

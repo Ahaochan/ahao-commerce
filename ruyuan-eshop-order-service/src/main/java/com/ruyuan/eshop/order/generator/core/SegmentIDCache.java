@@ -19,13 +19,10 @@ public class SegmentIDCache implements ApplicationListener<ContextRefreshedEvent
     @Resource
     private OrderAutoNoMapper orderAutoNoMapper;
 
-    // 多线程写和读的可见性，用了volatile来保证这个东西
     private volatile boolean initOk = false;
 
-    // 每个业务标识都有一个双缓冲
     private final Map<String, SegmentBuffer> cache = new ConcurrentHashMap<>();
 
-    // spring容器回调这个方法
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         checkAndInit();
@@ -41,7 +38,7 @@ public class SegmentIDCache implements ApplicationListener<ContextRefreshedEvent
                 if (!initOk) {
                     log.info("Init ...");
                     // 确保加载到kv后才初始化成功
-                    updateCacheFromDb(); // 从数据库里加载序列号到缓存里，才算初始化成功了
+                    updateCacheFromDb();
                     initOk = true;
                     log.info("Init Ok ...");
                 }
@@ -94,8 +91,6 @@ public class SegmentIDCache implements ApplicationListener<ContextRefreshedEvent
                 log.info("Add bizCode {} from db to IdCache, SegmentBuffer {}", bizCode, buffer);
             }
 
-            // 把db里有的业务标识，从原来的cache里的业务标识里删除
-            // 剩下的，removeBizSet里剩下的，就是db里没有的业务标识
             for (String tmp : dbBizCodes) {
                 removeBizSet.remove(tmp);
             }

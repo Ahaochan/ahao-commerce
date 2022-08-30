@@ -127,8 +127,6 @@ public class CouponServiceImpl implements CouponService {
             log.info("当前用户未使用优惠券,不用回退,userId:{},couponId:{}", userId, couponId);
             return true;
         }
-        // 可以看一下，优惠券空回滚是没关系
-        // 状态一直停留在un_used，空回滚，也仅仅是更新为un_used，没有任何问题和影响
         couponAchieve.setUsed(CouponUsedStatusEnum.UN_USED.getCode());
         couponAchieve.setUsedTime(null);
         couponDAO.updateById(couponAchieve);

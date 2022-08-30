@@ -1,5 +1,6 @@
 package com.ruyuan.eshop.order.statemachine.action.order.create.node;
 
+import cn.hutool.json.JSONUtil;
 import com.ruyuan.eshop.address.domain.dto.AddressDTO;
 import com.ruyuan.eshop.address.domain.query.AddressQuery;
 import com.ruyuan.eshop.common.utils.JsonUtil;
@@ -10,9 +11,12 @@ import com.ruyuan.eshop.order.builder.FullOrderData;
 import com.ruyuan.eshop.order.builder.NewOrderBuilder;
 import com.ruyuan.eshop.order.config.OrderProperties;
 import com.ruyuan.eshop.order.converter.OrderConverter;
+import com.ruyuan.eshop.order.dao.OrderSnapshotDAO;
+import com.ruyuan.eshop.order.dao.OrderSnapshotDAOUtils;
 import com.ruyuan.eshop.order.domain.entity.*;
 import com.ruyuan.eshop.order.domain.request.CreateOrderRequest;
 import com.ruyuan.eshop.order.enums.SnapshotTypeEnum;
+import com.ruyuan.eshop.order.hbase.entity.OrderInfoExtJsonDTO;
 import com.ruyuan.eshop.order.remote.AddressRemote;
 import com.ruyuan.eshop.order.remote.MarketRemote;
 import com.ruyuan.eshop.order.service.impl.NewOrderDataHolder;
@@ -22,7 +26,6 @@ import com.ruyuan.process.engine.process.StandardProcessor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,7 +83,6 @@ public class CreateOrderMasterBuilderNode extends StandardProcessor {
                                             CalculateOrderAmountDTO calculateOrderAmountDTO) {
         NewOrderBuilder newOrderBuilder = new NewOrderBuilder(createOrderRequest, productSkuList, productTypeMap,
                 calculateOrderAmountDTO, orderProperties, orderConverter);
-
         FullOrderData fullOrderData = newOrderBuilder.buildOrder()
                 .setOrderType()
                 .buildOrderItems()
@@ -138,6 +140,13 @@ public class CreateOrderMasterBuilderNode extends StandardProcessor {
                 orderSnapshotDO.setSnapshotJson(JsonUtil.object2Json(orderItemDOList));
             }
         }
+
+        // 预分配主单快照在HBASE中的rowKey前缀
+        OrderInfoExtJsonDTO orderInfoExtJsonDTO = new OrderInfoExtJsonDTO();
+        orderInfoExtJsonDTO.setOrderSnapshotRowKeyPrefixList(OrderSnapshotDAOUtils.batchGenerateRowKey(orderSnapshotDOList.size()));
+        orderInfoDO.setExtJson(JSONUtil.toJsonStr(orderInfoExtJsonDTO));
+
+        fullOrderData.setOrderInfoDO(orderInfoDO);
 
         return fullOrderData;
     }
